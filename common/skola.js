@@ -1,0 +1,261 @@
+/* Škola – sdílené jádro interaktivních stránek (body, hlasy, předčítání, navigace, hodnocení)
+   a hotový engine pro slovíčka. Načítá se klasickým <script src> (ne modul), aby fungovalo i přes file://.
+   Stránka musí mít #app, #score, #voiceSel, #voiceWarn a <nav> s tlačítky data-mode. */
+
+const app = document.getElementById("app");
+const SKOLA = { scoreKey: "score", rate: 0.85, czRate: 0.9, czech: true, say: {} };
+let score = 0, voices = [], voice = null, csVoice = null, seqToken = 0;
+
+function addScore(n) { score += n; localStorage.setItem(SKOLA.scoreKey, score); document.getElementById("score").textContent = score; }
+function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+/* porovnání odpovědí: bez ohledu na velikost písmen, mezery, tečky a druh apostrofu */
+function norm(s) { return s.toLowerCase().replace(/[’‘`´]/g, "'").replace(/[.!]/g, "").replace(/\s+/g, " ").trim(); }
+
+/* --- hlasy --- */
+function voiceRank(v) {
+  const l = v.lang.replace("_", "-").toLowerCase(), n = v.name.toLowerCase();
+  let r = 0;
+  if (l === "en-gb" || /united kingdom|uk english|british/.test(n)) r += 100;
+  if (/natural|online|neural/.test(n)) r += 20;
+  if (/google/.test(n)) r += 10;
+  if (/sonia|ryan|libby|hazel|george|susan|daniel|kate|serena/.test(n)) r += 5;
+  return r;
+}
+function loadVoices() {
+  const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
+  if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
+  const all = speechSynthesis.getVoices();
+  voices = all.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  csVoice = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => (/natural|online|neural/i.test(b.name) ? 1 : 0) - (/natural|online|neural/i.test(a.name) ? 1 : 0))[0] || null;
+  const hasGB = voices.some(v => voiceRank(v) >= 100);
+  voiceWarn.innerHTML = (hasGB ? "" :
+    "⚠️ Britský hlas nenalezen. Otevřete stránku v <b>Microsoft Edge</b> (hlasy Sonia/Ryan) nebo v <b>Chrome</b> (Google UK English), " +
+    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.") +
+    (!SKOLA.czech || csVoice || !all.length ? "" : (hasGB ? "" : "<br>") +
+    "⚠️ Český hlas nenalezen, čeština se nebude předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>.");
+  if (!voices.length) { voiceSel.innerHTML = "<option>žádný anglický hlas</option>"; return; }
+  const saved = localStorage.getItem("schoolVoice");
+  voice = voices.find(v => v.name === saved) || voices[0];
+  voiceSel.innerHTML = voices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+  voiceSel.value = voice.name;
+}
+
+/* --- předčítání --- */
+function utter(text, rate) {
+  const u = new SpeechSynthesisUtterance(SKOLA.say[text] || text);
+  if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
+  u.rate = rate || SKOLA.rate;
+  return u;
+}
+function czUtter(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = csVoice; u.lang = csVoice.lang; u.rate = SKOLA.czRate;
+  return u;
+}
+function stopSpeech() { seqToken++; if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+/* anglicky; text se přeloží přes SKOLA.say (opravy výslovnosti, např. "PE" → "P. E.") */
+function speak(text, rate) {
+  if (!("speechSynthesis" in window)) return;
+  stopSpeech();
+  speechSynthesis.speak(utter(text, rate));
+}
+function speakCz(text) {
+  if (!("speechSynthesis" in window) || !csVoice) return;
+  stopSpeech();
+  speechSynthesis.speak(czUtter(text));
+}
+/* nejdřív anglicky, hned potom česky */
+function speakBoth(en, cz, rate) {
+  speak(en, rate);
+  if (csVoice && cz) speechSynthesis.speak(czUtter(cz));
+}
+/* anglické položky postupně s pauzou (hláskování, abeceda) */
+function speakSeq(items, pause = 350, rate) {
+  if (!("speechSynthesis" in window)) return;
+  stopSpeech();
+  const id = seqToken;
+  let k = 0;
+  const next = () => {
+    if (id !== seqToken || k >= items.length) return;
+    const u = utter(items[k++], rate);
+    u.onend = () => setTimeout(next, pause);
+    speechSynthesis.speak(u);
+  };
+  next();
+}
+
+function finish(correct, total, again) {
+  const pct = correct / total;
+  const msg = pct === 1 ? "🏆 Perfektní!" : pct >= 0.7 ? "🌟 Skvělá práce!" : "💪 Dobrý začátek, procvič si to ještě!";
+  app.innerHTML = `<div class="center"><h2>${msg}</h2><div class="big">${correct} / ${total}</div>
+    <button class="btn" id="again">🔄 Znovu</button></div>`;
+  app.querySelector("#again").onclick = again;
+}
+
+/* Spuštění stránky.
+   opt.scoreKey – klíč v localStorage pro body (každá stránka vlastní!)
+   opt.modes    – { learn, ... } funkce režimů podle data-mode v <nav>; spustí se tlačítko s class="active"
+   opt.demo     – věta (nebo funkce) přehraná po změně hlasu
+   opt.rate     – výchozí rychlost angličtiny (0.85); opt.czech: false = nevarovat kvůli chybějícímu českému hlasu */
+function skolaStart(opt) {
+  Object.assign(SKOLA, opt);
+  score = +(localStorage.getItem(SKOLA.scoreKey) || 0);
+  document.getElementById("score").textContent = score;
+  const voiceSel = document.getElementById("voiceSel");
+  voiceSel.onchange = () => {
+    voice = voices.find(v => v.name === voiceSel.value);
+    localStorage.setItem("schoolVoice", voice.name);
+    typeof opt.demo === "function" ? opt.demo() : speak(opt.demo || "Hello!");
+  };
+  if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; } else loadVoices();
+  const btns = document.querySelectorAll("nav button");
+  btns.forEach(b => b.onclick = () => {
+    btns.forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    opt.modes[b.dataset.mode]();
+  });
+  (document.querySelector("nav button.active") || btns[0]).click();
+}
+
+/* ===== Engine pro slovíčka: režimy learn / match / quiz / write =====
+   words: [{ cz, en, alt?: [], e: "emoji", say?: "jak vyslovit", w?: "slovo bez členu" }]
+   – en se zobrazuje a vyslovuje (může obsahovat člen: "a laptop"); v psaní se uzná i bez členu,
+     u slov bez členu (glasses) se naopak člen neuzná.
+   opt.learnExtra – HTML pod kartičkami v režimu Učím se; ostatní volby viz skolaStart */
+function skolaVocab(opt) {
+  const WORDS = opt.words;
+  WORDS.forEach(w => { if (w.say) SKOLA.say[w.en] = w.say; });
+  const stripArt = s => s.replace(/^(a|an)\s+/, "");
+  const isOk = (w, v) => {
+    if (!/^(a|an) /.test(w.en) && /^(a|an) /.test(norm(v))) return false;
+    const bare = stripArt(norm(v));
+    return [w.en, w.w || w.en, ...(w.alt || [])].some(a => stripArt(norm(a)) === bare);
+  };
+
+  function learn() {
+    app.innerHTML = `<h2>📖 Slovíčka – klikni a poslechni si výslovnost</h2><div class="grid">${
+      WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz}</div></div>`).join("")
+    }</div>${opt.learnExtra || ""}`;
+    app.querySelectorAll(".card").forEach(c => { const w = WORDS[c.dataset.i]; c.onclick = () => speakBoth(w.en, w.cz); });
+  }
+
+  function match() {
+    const set = shuffle(WORDS).slice(0, 6);
+    let selected = null, done = 0, mistakes = 0;
+    app.innerHTML = `<h2>🔗 Přiřaď anglické slovo k českému</h2>
+      <div class="cols"><div id="colEn"></div><div id="colCz"></div></div>
+      <div class="feedback" id="fb"></div>
+      <div class="center"><button class="btn" id="again">🔄 Nová sada</button></div>`;
+    const colEn = app.querySelector("#colEn"), colCz = app.querySelector("#colCz"), fb = app.querySelector("#fb");
+    const mk = (w, side) => {
+      const t = document.createElement("div");
+      t.className = "tile"; t.textContent = side === "en" ? w.en : `${w.e} ${w.cz}`;
+      t.dataset.key = w.en; t.dataset.side = side;
+      t.onclick = () => choose(t);
+      return t;
+    };
+    shuffle(set).forEach(w => colEn.appendChild(mk(w, "en")));
+    shuffle(set).forEach(w => colCz.appendChild(mk(w, "cz")));
+    function choose(t) {
+      if (t.classList.contains("done")) return;
+      if (t.dataset.side === "en") speak(t.dataset.key);
+      else speakCz(WORDS.find(x => x.en === t.dataset.key).cz);
+      if (!selected || selected.dataset.side === t.dataset.side) {
+        if (selected) selected.classList.remove("sel");
+        selected = t; t.classList.add("sel"); return;
+      }
+      if (selected.dataset.key === t.dataset.key) {
+        [selected, t].forEach(x => { x.classList.remove("sel"); x.classList.add("done"); });
+        done++; addScore(1); fb.innerHTML = `<span class="good">Správně! 👍</span>`;
+        if (done === set.length) fb.innerHTML = `<span class="good">🎉 Hotovo! Chyb: ${mistakes}</span>`;
+      } else {
+        mistakes++;
+        const a = selected; [a, t].forEach(x => x.classList.add("wrong"));
+        fb.innerHTML = `<span class="badc">Zkus to znovu 🙂</span>`;
+        setTimeout(() => [a, t].forEach(x => x.classList.remove("wrong", "sel")), 500);
+      }
+      selected = null;
+    }
+    app.querySelector("#again").onclick = match;
+  }
+
+  function quiz() {
+    const order = shuffle(WORDS).slice(0, 10);
+    let i = 0, correct = 0;
+    function show() {
+      if (i >= order.length) return finish(correct, order.length, quiz);
+      const w = order[i];
+      const toEn = Math.random() < 0.5;
+      const opts = shuffle([w, ...shuffle(WORDS.filter(x => x !== w)).slice(0, 3)]);
+      app.innerHTML = `<h2>❓ Kvíz (${i + 1}/${order.length})</h2>
+        <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+        <div class="big clk">${w.e} ${toEn ? w.cz : w.en} 🔊</div>
+        <p class="center">${toEn ? "Jak se to řekne anglicky?" : "Co to znamená česky?"}</p>
+        <div class="options">${opts.map(o => `<button data-k="${o.en}">${toEn ? o.en : o.cz}</button>`).join("")}</div>
+        <div class="feedback" id="fb"></div>`;
+      const sayPrompt = () => toEn ? speakCz(w.cz) : speak(w.en);
+      sayPrompt();
+      app.querySelector(".big").onclick = sayPrompt;
+      app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+        app.querySelectorAll(".options button").forEach(x => { x.disabled = true; if (x.dataset.k === w.en) x.classList.add("ok"); });
+        const fb = app.querySelector("#fb");
+        if (b.dataset.k === w.en) { correct++; addScore(2); fb.innerHTML = `<span class="good">Výborně! ⭐</span>`; }
+        else { b.classList.add("bad"); fb.innerHTML = `<span class="badc">Správně je: ${w.en} = ${w.cz}</span>`; }
+        speak(w.en);
+        setTimeout(() => { i++; show(); }, 1500);
+      });
+    }
+    show();
+  }
+
+  function write() {
+    const order = shuffle(WORDS).slice(0, 10);
+    let i = 0, correct = 0, tries = 0, hintLen = 0;
+    function show() {
+      if (i >= order.length) return finish(correct, order.length, write);
+      const w = order[i]; tries = 0; hintLen = 0;
+      app.innerHTML = `<h2>✏️ Napiš anglicky (${i + 1}/${order.length})</h2>
+        <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+        <div class="big clk">${w.e} ${w.cz} 🔊</div>
+        <div class="hint" id="hint"></div>
+        <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sem napiš slovíčko">
+        <div class="center">
+          <button class="btn" id="check">✔️ Zkontrolovat</button>
+          <button class="btn light" id="hintBtn">💡 Nápověda</button>
+          <button class="btn light" id="listen">🔊 Poslechnout</button>
+          <button class="btn light" id="skip">⏭️ Nevím</button>
+        </div>
+        <div class="feedback" id="fb"></div>`;
+      const inp = app.querySelector("#inp"), fb = app.querySelector("#fb"), hint = app.querySelector("#hint");
+      inp.focus();
+      speakCz(w.cz);
+      app.querySelector(".big").onclick = () => { speakCz(w.cz); inp.focus(); };
+      const renderHint = () => hint.textContent = [...w.en].map((c, k) => c === " " ? " " : (k < hintLen ? c : "_")).join("");
+      renderHint();
+      const next = () => setTimeout(() => { i++; show(); }, 1700);
+      const fail = () => { fb.innerHTML = `<span class="badc">Správně je: <b>${w.en}</b></span>`; speak(w.en); inp.disabled = true; order.push(w); next(); };
+      const check = () => {
+        if (!norm(inp.value)) return;
+        if (isOk(w, inp.value)) {
+          const pts = Math.max(1, 3 - tries - hintLen);
+          correct++; addScore(pts); speak(w.en);
+          fb.innerHTML = `<span class="good">Správně! 🎉 +${pts} ${norm(w.en) !== norm(inp.value) ? "(" + w.en + ")" : ""}</span>`;
+          inp.disabled = true; next();
+        } else {
+          tries++;
+          if (tries >= 3) fail();
+          else fb.innerHTML = `<span class="badc">Ještě ne, zkus to znovu (pokus ${tries}/3)</span>`;
+        }
+      };
+      app.querySelector("#check").onclick = check;
+      inp.onkeydown = e => { if (e.key === "Enter") check(); };
+      app.querySelector("#hintBtn").onclick = () => { if (hintLen < w.en.length) { hintLen++; renderHint(); } inp.focus(); };
+      app.querySelector("#listen").onclick = () => { speak(w.en); inp.focus(); };
+      app.querySelector("#skip").onclick = () => { if (!inp.disabled) fail(); };
+    }
+    show();
+  }
+
+  skolaStart({ ...opt, modes: { learn, match, quiz, write, ...(opt.modes || {}) } });
+}
