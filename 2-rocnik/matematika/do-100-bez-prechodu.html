@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%AF%3C/text%3E%3C/svg%3E">
+<title>Počítání do 100 💯</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .ex { text-align: center; font-size: 1.5rem; margin: 10px 0; }
+  .ex .blocks { margin: 0 6px; vertical-align: middle; }
+  .steps { font-size: 1.3rem; text-align: center; }
+  .d { color: #c0392b; font-weight: bold; } .j { color: #2d7a2a; font-weight: bold; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>💯 Počítání do 100</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="tens">🟥 Desítky</button>
+  <button data-mode="ones">🟩 Jednotky</button>
+  <button data-mode="mixed">🔀 Smíšené</button>
+  <button data-mode="sprint">⏱️ Minutovka</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const T = n => Math.floor(n / 10), U = n => n % 10;
+const split = n => `<span class="d">${T(n)} ${T(n) === 1 ? "desítka" : T(n) <= 4 ? "desítky" : "desítek"}</span> a <span class="j">${U(n)} ${U(n) === 1 ? "jednotka" : U(n) <= 4 && U(n) ? "jednotky" : "jednotek"}</span>`;
+
+/* x = { a, b, op } → { q, a, help } */
+function make(a, b, op) {
+  const r = op === "+" ? a + b : a - b, s = op === "+" ? "+" : "−";
+  let how;
+  if (U(a) && U(b) && T(b)) how = `${a} ${s} ${b} = ${a} ${s} ${T(b) * 10} ${s} ${U(b)}<br>Nejdřív desítky: ${a} ${s} ${T(b) * 10} = ${op === "+" ? a + T(b) * 10 : a - T(b) * 10}, pak jednotky: ${op === "+" ? a + T(b) * 10 : a - T(b) * 10} ${s} ${U(b)} = ?`;
+  else if (U(b) === 0) how = `Počítám jen <span class="d">desítky</span>: ${T(a)} ${s} ${T(b)} = ${op === "+" ? T(a) + T(b) : T(a) - T(b)}. ${U(a) ? `Jednotky (${U(a)}) se nemění.` : ""}`;
+  else how = `Počítám jen <span class="j">jednotky</span>: ${U(a)} ${s} ${U(b)} = ${op === "+" ? U(a) + U(b) : U(a) - U(b)}. Desítky (${T(a)}) se nemění.`;
+  return { q: `${a} ${s} ${b}`, a: r, help: `<div class="ex">${cvicBlocks(a)} <b>${s}</b> ${cvicBlocks(b)}</div><div class="steps">${how}</div>` };
+}
+const genTens = () => {
+  const op = Math.random() < .5 ? "+" : "−";
+  if (Math.random() < .5) {
+    const a = rnd(1, 9) * 10, b = rnd(1, 9) * 10;
+    return op === "+" ? (a + b <= 100 ? make(a, b, "+") : genTens()) : (a > b ? make(a, b, "-") : genTens());
+  }
+  const a = rnd(1, 9) * 10 + rnd(1, 9), b = rnd(1, 8) * 10;
+  return op === "+" ? (a + b < 100 ? make(a, b, "+") : genTens()) : (a - b > 0 ? make(a, b, "-") : genTens());
+};
+const genOnes = () => {
+  if (Math.random() < .5) { const t = rnd(1, 9), u = rnd(0, 8); return make(t * 10 + u, rnd(1, 9 - u), "+"); }
+  const t = rnd(1, 9), u = rnd(1, 9); return make(t * 10 + u, rnd(1, u), "-");
+};
+const genMixed = () => {
+  if (Math.random() < .5) {
+    const t1 = rnd(1, 7), t2 = rnd(1, 8 - t1), u1 = rnd(1, 8), u2 = rnd(1, 9 - u1);
+    return make(t1 * 10 + u1, t2 * 10 + u2, "+");
+  }
+  const t1 = rnd(2, 9), t2 = rnd(1, t1 - 1), u1 = rnd(1, 9), u2 = rnd(1, u1);
+  return make(t1 * 10 + u1, t2 * 10 + u2, "-");
+};
+const genAll = () => [genTens, genOnes, genMixed][rnd(0, 2)]();
+
+function learn() {
+  const ex = [
+    [make(40, 30, "+"), "40 plus 30. Počítám desítky: 4 plus 3 je 7. Výsledek je 70."],
+    [make(34, 20, "+"), "34 plus 20. Počítám desítky: 3 plus 2 je 5. Jednotky se nemění. Výsledek je 54."],
+    [make(58, 6, "-"), "58 mínus 6. Počítám jednotky: 8 mínus 6 jsou 2. Desítky se nemění. Výsledek je 52."],
+    [make(45, 23, "+"), "45 plus 23. Nejdřív přičtu desítky: 45 plus 20 je 65. Pak jednotky: 65 plus 3 je 68."],
+    [make(78, 35, "-"), "78 mínus 35. Nejdřív odečtu desítky: 78 mínus 30 je 48. Pak jednotky: 48 mínus 5 je 43."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Počítání do sta bez přechodu">📖 Počítání do 100 bez přechodu <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Číslo 34 má 3 desítky a 4 jednotky.">
+      <div class="ex">${cvicBlocks(34)} = <b>34</b></div><div class="center">${split(34)} <span class="ico">🔊</span></div></div>
+    <div class="box clk" data-say="Desítky počítám s desítkami a jednotky s jednotkami.">🟥 <b>Desítky</b> počítám s desítkami, 🟩 <b>jednotky</b> s jednotkami. <span class="ico">🔊</span></div>
+    ${ex.map(([x, say]) => `<div class="box clk" data-say="${say}">${x.help}<div class="ex">${x.q} = <b>${x.a}</b> <span class="ico">🔊</span></div></div>`).join("")}`;
+  czBind();
+}
+
+const tens = () => cvicNumbers({ title: "🟥 Počítám s desítkami", gen: genTens, again: tens });
+const ones = () => cvicNumbers({ title: "🟩 Počítám s jednotkami", gen: genOnes, again: ones });
+const mixed = () => cvicNumbers({ title: "🔀 Desítky i jednotky", gen: genMixed, again: mixed });
+const sprint = () => cvicSprint({ title: "Minutovka do 100", gen: genAll, id: "do100" });
+
+skolaStart({ scoreKey: "mDo100Score", english: false, modes: { learn, tens, ones, mixed, sprint } });
+</script>
+</body>
+</html>

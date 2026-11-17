@@ -188,7 +188,7 @@ function cvicDictation(o) {
   });
 }
 
-/* Kvíz s možnostmi: items: [{ q: "HTML", say?: "text", opts: [...], a: "správná", why?: "HTML", after?: "text" }]
+/* Kvíz s možnostmi: items: [{ q: "HTML", say?: "text", rate?: 0.7, opts: [...], a: "správná", why?: "HTML", after?: "text" }]
    o.cls – třída pro .options (např. "three"); špatná odpověď čeká na Další */
 function cvicChoice(o) {
   cvicRound(o.items, o.again, (x, i, n, done) => {
@@ -197,7 +197,7 @@ function cvicChoice(o) {
       ${o.ask ? `<p class="center clk" id="ask">${o.ask} <span class="ico">🔊</span></p>` : ""}
       <div class="options ${o.cls || ""}">${x.opts.map(t => `<button data-t="${t}">${t}</button>`).join("")}</div>
       <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
-    const say = () => speakCz(x.say || czClean(x.q));
+    const say = () => speakCz(x.say || czClean(x.q), x.rate);
     if (!o.silent) say();
     app.querySelector("#q").onclick = say;
     if (o.ask) app.querySelector("#ask").onclick = () => speakCz(czClean(o.ask));

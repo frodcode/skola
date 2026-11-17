@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%91%82%3C/text%3E%3C/svg%3E">
+<title>Hlásky ve slově 👂</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .slots { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .slot { width: 52px; height: 62px; border-bottom: 4px solid #5b4bb7; font-size: 2.2rem; font-weight: bold; text-align: center; line-height: 62px; color: #2d7a2a; }
+  .slot.now { background: #efeaff; border-radius: 8px 8px 0 0; }
+  .letters { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+  .letters button { width: 62px; height: 62px; font-size: 2rem; font-weight: bold; border: none; border-radius: 14px; background: #fff3c4; box-shadow: 0 4px 0 #d4b200; cursor: pointer; }
+  .letters button:disabled { visibility: hidden; }
+  .letters button.wrong { background: #ffc9c9; animation: shake .3s; }
+  .big { font-size: 2.6rem; letter-spacing: 4px; font-weight: bold; }
+  .pairs td { font-size: 1.5rem; padding: 6px 12px; }
+  .bad-w { color: #c0392b; text-decoration: line-through; }
+  .split { letter-spacing: 2px; }
+  .big .gap { min-width: 36px; text-align: center; }
+  .options.nums { grid-template-columns: repeat(4, 1fr); }
+  .options.nums button, .options.three button { font-size: 2rem; font-weight: bold; }
+  @media (max-width: 560px) { .options.nums { grid-template-columns: 1fr 1fr; } .options.three { grid-template-columns: 1fr 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>👂 Hlásky ve slově</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="count">🔢 Kolik hlásek?</button>
+  <button data-mode="missing">🔍 Co chybí?</button>
+  <button data-mode="compose">🧩 Slož slovo</button>
+  <button data-mode="dict">✏️ Diktát</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* w = slovo, e = obrázek; c:0 = počet písmen ≠ počet hlásek (ou, ě po b/p/v/m…) – nepoužívá se v „Kolik hlásek?“ */
+const WORDS = [
+  { w: "pes", e: "🐶" }, { w: "myš", e: "🐭" }, { w: "vlak", e: "🚂" }, { w: "kolo", e: "🚲" },
+  { w: "dort", e: "🎂" }, { w: "ryba", e: "🐟" }, { w: "sova", e: "🦉" }, { w: "drak", e: "🐉" },
+  { w: "hrad", e: "🏰" }, { w: "klíč", e: "🔑" }, { w: "strom", e: "🌳" }, { w: "mrkev", e: "🥕" },
+  { w: "kočka", e: "🐱" }, { w: "anděl", e: "👼" }, { w: "motýl", e: "🦋" }, { w: "kráva", e: "🐄" },
+  { w: "prase", e: "🐷" }, { w: "zebra", e: "🦓" }, { w: "srdce", e: "❤️" }, { w: "slunce", e: "☀️" },
+  { w: "jablko", e: "🍎" }, { w: "hruška", e: "🍐" }, { w: "kytara", e: "🎸" }, { w: "žirafa", e: "🦒" },
+  { w: "koruna", e: "👑" }, { w: "raketa", e: "🚀" }, { w: "hřeben", e: "" }, { w: "letadlo", e: "✈️" },
+  { w: "veverka", e: "🐿️" }, { w: "tramvaj", e: "🚋" }, { w: "krokodýl", e: "🐊" }, { w: "zmrzlina", e: "🍦" },
+  { w: "trumpeta", e: "🎺" }, { w: "klobouk", e: "🎩", c: 0 }, { w: "medvěd", e: "🐻", c: 0 }, { w: "pavouk", e: "🕷️", c: 0 },
+];
+/* slova, ve kterých se v diktátech vynechávaly hlásky */
+const TRICKY = [
+  { bad: "hřebn", w: "hřeben" }, { bad: "klobut", w: "klobouk" },
+  { bad: "aděl", w: "anděl" }, { bad: "vekra", w: "veverka" }, { bad: "letado", w: "letadlo" },
+];
+const W = w => WORDS.find(x => x.w === w);
+const pic = x => x.e ? `<span class="pic">${x.e}</span>` : `<span class="pic">👂</span>`;
+const hl = n => n === 1 ? "hlásku" : n <= 4 ? "hlásky" : "hlásek";
+const NUM = ["", "jednu", "dvě", "tři", "čtyři", "pět", "šest", "sedm", "osm", "devět"];
+const sample = (arr, n) => shuffle(arr).slice(0, n);
+
+function learn() {
+  app.innerHTML = `<h2 class="clk" data-say="Hlásky ve slově">📖 Hlásky ve slově <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Když píšeš slovo, řekni si ho pomalu, hlásku po hlásce. Každou hlásku, kterou slyšíš, napiš.">🐢 Když píšeš slovo, řekni si ho <b>pomalu</b> – hlásku po hlásce. Každou hlásku, kterou slyšíš, napiš. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Na konci si slovo přečti a zkontroluj, jestli ti žádná hláska nechybí.">🔍 Na konci si slovo <b>přečti</b> a zkontroluj, jestli ti žádná hláska nechybí. <span class="ico">🔊</span></div>
+    <h3 class="hs">⚠️ Pozor na tato slova <span class="ico">🔊</span></h3>
+    <table class="pairs center" style="margin:0 auto">${TRICKY.map(t => `<tr>
+      <td>${pic(W(t.w))}</td>
+      <td class="bad-w">${t.bad}</td><td>➜</td>
+      <td>${czSay(`<b>${t.w}</b>`, t.w)}</td>
+      <td><button class="btn light slow" data-w="${t.w}">🐢 Pomalu</button></td></tr>`).join("")}</table>
+    <p class="center note">Klikni na 🐢 a slovo zazní pomalu.</p>`;
+  czBind();
+  app.querySelectorAll(".slow").forEach(b => b.onclick = () => speakCz(b.dataset.w, 0.45));
+}
+
+function count() {
+  const items = sample(WORDS.filter(x => x.c !== 0), 10).map(x => {
+    const n = [...x.w].length;
+    const lo = Math.max(2, n - 1 - Math.floor(Math.random() * 2));
+    return {
+      q: `${pic(x)}<div class="note">Poslechni si slovo a spočítej hlásky.</div>`, say: x.w, rate: 0.55,
+      opts: [lo, lo + 1, lo + 2, lo + 3].map(String), a: String(n),
+      why: `<span class="big split">${[...x.w].join(" · ")}</span><br>${x.w} má ${n} ${hl(n)}`,
+      after: `${x.w}. ${NUM[n]} ${hl(n)}`,
+    };
+  });
+  cvicChoice({ title: "🔢 Kolik hlásek?", items, again: count, cls: "nums" });
+}
+
+function missing() {
+  const letters = "aeiouyrlmnkstpvdbhzjá";
+  const items = sample(WORDS, 10).map(x => {
+    const ch = [...x.w], k = 1 + Math.floor(Math.random() * (ch.length - 1)), a = ch[k];
+    const opts = shuffle([a, ...sample([...letters].filter(l => l !== a), 2)]);
+    ch[k] = `<span class="gap">_</span>`;
+    return { q: `${pic(x)}<div class="big">${ch.join("")}</div>`, say: x.w, rate: 0.7, opts, a, why: `<span class="big">${x.w}</span>`, after: x.w };
+  });
+  cvicChoice({ title: "🔍 Které písmenko chybí?", items, again: missing, cls: "three" });
+}
+
+function compose() {
+  cvicRound(sample(WORDS, 8), compose, (x, i, n, done) => {
+    const ch = [...x.w];
+    let pos = 0, mistakes = 0;
+    app.innerHTML = `${cvicHead("🧩 Slož slovo", i, n)}
+      <div class="task clk" id="q">${pic(x)} <span class="ico">🔊</span></div>
+      <div class="slots">${ch.map((_, k) => `<span class="slot${k ? "" : " now"}"></span>`).join("")}</div>
+      <div class="letters">${shuffle(ch.map((c, k) => ({ c, k }))).map(o => `<button data-c="${o.c}">${o.c}</button>`).join("")}</div>
+      <div class="center"><button class="btn light" id="slow">🐢 Pomalu</button></div>
+      <div class="feedback" id="fb"></div>`;
+    const slots = app.querySelectorAll(".slot"), fb = app.querySelector("#fb");
+    const say = () => speakCz(x.w, 0.75);
+    say();
+    app.querySelector("#q").onclick = say;
+    app.querySelector("#slow").onclick = () => speakCz(x.w, 0.45);
+    app.querySelectorAll(".letters button").forEach(b => b.onclick = () => {
+      if (pos >= ch.length) return;
+      if (b.dataset.c === ch[pos]) {
+        b.disabled = true;
+        slots[pos].textContent = ch[pos]; slots[pos].classList.remove("now");
+        pos++;
+        if (pos < ch.length) { slots[pos].classList.add("now"); fb.innerHTML = ""; return; }
+        const pts = mistakes ? 1 : 2; addScore(pts);
+        fb.innerHTML = `<span class="good">Výborně! 🎉 +${pts}</span>`;
+        speakCz(x.w, 0.8);
+        setTimeout(() => done(mistakes <= 1), 1600);
+      } else {
+        mistakes++;
+        b.classList.add("wrong"); setTimeout(() => b.classList.remove("wrong"), 400);
+        fb.innerHTML = `<span class="badc">Ještě ne. Řekni si slovo pomalu: ${ch.slice(0, pos).join("")}…</span>`;
+        speakCz(x.w, 0.45);
+      }
+    });
+  });
+}
+
+function dict() {
+  const extra = "aeiouylrnmkstvdp";
+  const items = shuffle([...TRICKY.map(t => W(t.w)), ...sample(WORDS.filter(x => !TRICKY.some(t => t.w === x.w)), 5)]);
+  cvicDictation({
+    title: "✏️ Diktát", items, again: dict, showPic: true,
+    keys: x => shuffle([...new Set([...x.w, ...sample([...extra].filter(l => !x.w.includes(l)), 3)])]),
+    help: x => `Slovo má ${[...x.w].length} ${hl([...x.w].length)}: <span class="big">${[...x.w].map((c, k) => k === 0 ? c : "_").join(" ")}</span>`,
+    wrong: (x, v) => [...v.trim()].length < [...x.w].length ? "Chybí ti hláska! Řekni si slovo pomalu" : "Ještě ne, poslechni si slovo znovu",
+  });
+}
+
+skolaStart({ scoreKey: "cjHlaskyScore", english: false, modes: { learn, count, missing, compose, dict } });
+</script>
+</body>
+</html>
