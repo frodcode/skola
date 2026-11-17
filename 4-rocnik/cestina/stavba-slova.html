@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+<title>Stavba slova 🧩</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .task { font-size: 1.5rem; }
+  .task .w1 { font-size: 2rem; display: block; margin-top: 4px; }
+  .p { color: #1f6fd1; } .k { color: #c0392b; } .s { color: #2d7a2a; } .o { color: #d35400; }
+  .word { font-size: 1.8rem; font-weight: bold; letter-spacing: 1px; }
+  .word span + span { border-left: 2px dashed #bbb; padding-left: 2px; margin-left: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .legend .sp { font-weight: bold; }
+  .segs { display: flex; justify-content: center; gap: 6px; margin: 16px 0; }
+  .segs button { font-size: 2.2rem; font-weight: bold; padding: 8px 16px; border-radius: 12px; border: 3px solid #5b4bb7; background: #fff; cursor: pointer; min-width: 60px; }
+  .segs button.ok { background: #c8f7c5; border-color: #2d7a2a; }
+  .segs button.bad { background: #ffc9c9; border-color: #c0392b; }
+  .segs button .r { display: block; font-size: .8rem; font-weight: normal; min-height: 1.1em; }
+  .ex td { padding: 4px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🧩 Stavba slova</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="part">🔍 Najdi část slova</button>
+  <button data-mode="relQuiz">👨‍👩‍👧 Příbuzná slova</button>
+  <button data-mode="rootSort">🗂️ Třídění podle kořene</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const ROLES = {
+  p: { n: "předpona", acc: "předponu", d: "je před kořenem" },
+  k: { n: "kořen", acc: "kořen", d: "společná část příbuzných slov, nese hlavní význam" },
+  s: { n: "přípona", acc: "příponu", d: "je za kořenem, tvoří nová slova" },
+  o: { n: "koncovka", acc: "koncovku", d: "je na konci, mění se při skloňování a časování" },
+};
+/* části slova oddělené | a jejich role: p předpona, k kořen, s přípona, o koncovka */
+const WORDS = [
+  ["pod|zem|n|í", "pkso"], ["pře|stav|b|a", "pkso"], ["vý|let|n|í", "pkso"], ["ná|kup|n|í", "pkso"],
+  ["vý|let", "pk"], ["do|pis", "pk"], ["pod|pis", "pk"], ["zá|pis", "pk"], ["pří|klad", "pk"], ["ná|kup", "pk"], ["pod|chod", "pk"], ["pře|chod", "pk"], ["pří|jezd", "pk"],
+  ["ryb|ník", "ks"], ["ryb|ář", "ks"], ["škol|ák", "ks"], ["zub|ař", "ks"], ["kup|ec", "ks"],
+  ["les|n|í", "kso"], ["hrad|n|í", "kso"], ["vod|n|í", "kso"], ["zub|n|í", "kso"], ["dub|ov|ý", "kso"], ["papír|ov|ý", "kso"], ["hor|sk|ý", "kso"],
+  ["škol|k|a", "kso"], ["ryb|ičk|a", "kso"], ["knih|a", "ko"], ["škol|a", "ko"],
+].map(([w, r]) => ({ parts: w.split("|"), roles: [...r], w: w.replace(/\|/g, "") }));
+/* y – příbuzná slova, n – podobně znějící, ale nepříbuzná */
+const REL = [
+  { r: "les", y: ["lesník", "lesní", "zalesnit", "lesík"], n: ["lesk", "lest", "lesklý"] },
+  { r: "voda", y: ["vodník", "vodní", "vodárna", "vodopád"], n: ["vodit", "vodítko"] },
+  { r: "hora", y: ["horský", "horal", "pohoří", "horolezec"], n: ["hořet", "horko", "hořčice"] },
+  { r: "škola", y: ["školní", "školák", "školka", "školník"], n: ["škoda", "škodit"] },
+  { r: "ryba", y: ["rybník", "rybář", "rybička", "rybí"], n: ["rybíz", "rytíř"] },
+  { r: "hrad", y: ["hradní", "hradby", "hrádek"], n: ["hrách", "hrabat", "hrábě"] },
+  { r: "zub", y: ["zubní", "zubař", "zoubek"], n: ["zubr"] },
+  { r: "pes", y: ["psí", "pejsek", "psisko"], n: ["pestrý", "písek"] },
+  { r: "sníh", y: ["sněhový", "sněhulák", "sněžit", "sněženka"], n: ["snídaně", "snílek"] },
+  { r: "kolo", y: ["kolečko", "koloběžka", "tříkolka"], n: ["kolibřík", "kolega"] },
+  { r: "mléko", y: ["mléčný", "mlékárna", "mlékař"], n: ["mlýn", "mlčet"] },
+  { r: "kniha", y: ["knihovna", "knížka", "knihkupectví"], n: ["knír", "knoflík"] },
+];
+const colored = x => `<span class="word">${x.parts.map((t, i) => `<span class="${x.roles[i]}">${t}</span>`).join("")}</span>`;
+const partsSay = x => `${x.w}: ${x.parts.map((t, i) => `${ROLES[x.roles[i]].n} ${t}`).join(", ")}.`;
+
+function learn() {
+  const ex = ["pod|zem|n|í", "pře|stav|b|a", "vý|let", "ryb|ník", "dub|ov|ý", "škol|k|a"].map(w => WORDS.find(x => x.parts.join("|") === w));
+  app.innerHTML = `<h2 class="clk" data-say="Stavba slova">📖 Stavba slova <span class="ico">🔊</span></h2>
+    <div class="legend">${Object.entries(ROLES).map(([k, r]) => `<span class="sp czw ${k}" data-say="${r.n}: ${r.d}.">${r.n} <span class="ico">🔊</span></span>`).join("")}</div>
+    <div class="box clk" data-say="Slovo se skládá z částí. Kořen je společná část příbuzných slov a nese hlavní význam. Před kořenem může být předpona, za kořenem přípona a na konci koncovka.">
+      🧩 <b class="p">předpona</b> + <b class="k">kořen</b> + <b class="s">přípona</b> + <b class="o">koncovka</b> <span class="ico">🔊</span></div>
+    <table class="t ex">${ex.map(x => `<tr><td class="clk" data-say="${partsSay(x)}">${colored(x)} <span class="ico">🔊</span></td>
+      <td class="note">${x.parts.map((t, i) => `<span class="${x.roles[i]}">${t}</span> = ${ROLES[x.roles[i]].n}`).join(", ")}</td></tr>`).join("")}</table>
+    <div class="box clk" data-say="Koncovka se mění, když slovo skloňujeme: podzemní, podzemního, podzemnímu. Některá slova mají koncovku nulovou, nevidíme ji: výlet, rybník.">
+      🔚 Koncovka se mění: podzemn<b class="o">í</b>, podzemn<b class="o">ího</b>, podzemn<b class="o">ímu</b>. Slova <i>výlet</i>, <i>rybník</i> mají koncovku <b>nulovou</b> – nevidíme ji. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Slova příbuzná mají stejný kořen a podobný význam: les, lesník, lesní, zalesnit. Pozor: lesk a lest nejsou slova příbuzná se slovem les, mají jiný význam.">
+      👨‍👩‍👧 <b>Slova příbuzná</b> mají <b class="k">stejný kořen</b> a souvisí významem: <b class="k">les</b> – <b class="k">les</b>ník – <b class="k">les</b>ní – za<b class="k">les</b>nit.<br>
+      ⚠️ <i>lesk</i>, <i>lest</i> nejsou příbuzná – jen podobně znějí. <span class="ico">🔊</span></div>`;
+  czBind();
+}
+
+function part() {
+  const items = shuffle(WORDS).slice(0, 10).map(x => ({ ...x, ask: pick([...new Set(x.roles)]) }));
+  cvicRound(items, part, (x, i, n, done) => {
+    const r = ROLES[x.ask], q = `Klikni na ${r.acc}`;
+    app.innerHTML = `${cvicHead("🔍 Najdi část slova", i, n)}
+      <div class="task clk" id="q">${q} <span class="ico">🔊</span></div>
+      <div class="segs">${x.parts.map((t, k) => `<button data-k="${k}">${t}<span class="r"></span></button>`).join("")}</div>
+      <div class="center"><button class="btn light" id="all">🔊 Přečti slovo</button></div>
+      <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    const say = () => speakCz(`${q} ve slově ${x.w}.`);
+    say();
+    app.querySelector("#q").onclick = say;
+    app.querySelector("#all").onclick = () => speakCz(x.w);
+    const btns = [...app.querySelectorAll(".segs button")];
+    btns.forEach(b => b.onclick = () => {
+      if (btns[0].disabled) return;
+      btns.forEach((y, k) => { y.disabled = true; y.classList.add(x.roles[k]); y.querySelector(".r").textContent = ROLES[x.roles[k]].n; if (x.roles[k] === x.ask) y.classList.add("ok"); });
+      const fb = app.querySelector("#fb"), why = `<span class="note">${x.parts.map((t, k) => `${t} = ${ROLES[x.roles[k]].n}`).join(", ")}</span>`;
+      if (x.roles[b.dataset.k] === x.ask) {
+        addScore(2);
+        fb.innerHTML = `<span class="good">Výborně! ⭐${why}</span>`;
+        setTimeout(() => done(true), 2200);
+      } else {
+        b.classList.add("bad");
+        fb.innerHTML = `<span class="badc">${r.n[0].toUpperCase() + r.n.slice(1)} je: ${x.parts[x.roles.indexOf(x.ask)]}${why}</span>`;
+        const nx = app.querySelector("#nx"); nx.innerHTML = `<button class="btn">Další ➡️</button>`; nx.firstChild.onclick = () => done(false);
+      }
+    });
+  });
+}
+
+function relQuiz() {
+  const items = shuffle(REL).slice(0, 10).map(g => {
+    const other = pick(REL.filter(x => x !== g));
+    if (Math.random() < .5) {
+      const a = pick(g.y), traps = shuffle([...g.n, ...other.n]).slice(0, 2);
+      return { q: `Které slovo je příbuzné se slovem<span class="w1">${g.r}</span>`, say: `Které slovo je příbuzné se slovem ${g.r}?`,
+        opts: shuffle([a, ...traps, pick(other.y)]), a, why: `${g.r} – ${a}: stejný kořen`, after: `${g.r}, ${a}` };
+    }
+    const a = pick(g.n);
+    return { q: `Které slovo <u>není</u> příbuzné se slovem<span class="w1">${g.r}</span>`, say: `Které slovo není příbuzné se slovem ${g.r}?`,
+      opts: shuffle([a, ...shuffle(g.y).slice(0, 3)]), a, why: `${a} jen podobně zní, ale má jiný význam.`, after: a };
+  });
+  cvicChoice({ title: "👨‍👩‍👧 Slova příbuzná", items, again: relQuiz });
+}
+
+function rootSort() {
+  const groups = shuffle(REL).slice(0, 3);
+  const items = shuffle(groups.flatMap(g => shuffle(g.y).slice(0, 3).map(w => ({ t: w, k: g.r }))));
+  cvicSort({ title: "🗂️ Ke kterému slovu je příbuzné?", cols: groups.map(g => ({ k: g.r, t: g.r })), items, again: rootSort });
+}
+
+skolaStart({ scoreKey: "cjStavbaSlovaScore", english: false, demo: "Podzemní: předpona pod, kořen zem, přípona n, koncovka í.", modes: { learn, part, relQuiz, rootSort } });
+</script>
+</body>
+</html>

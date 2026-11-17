@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9C%96%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>Malá a velká násobilka ✖️</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .rows { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
+  .rows button { font-size: 1.3rem; min-width: 52px; padding: 8px; border-radius: 10px; border: 2px solid #5b4bb7; background: #fff; cursor: pointer; }
+  .rows button.sel { background: #5b4bb7; color: #fff; }
+  .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .row .sp { font-size: 1.25rem; text-align: center; }
+  .steps { text-align: center; font-size: 1.3rem; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>✖️ Násobilka</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="row">🎯 Jedna řada</button>
+  <button data-mode="mala">✖️ Malá násobilka</button>
+  <button data-mode="deleni">➗ Dělení</button>
+  <button data-mode="velka">💪 Velká násobilka</button>
+  <button data-mode="sprint">⏱️ Minutovka</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const mul = (a, b) => ({ q: `${a} · ${b}`, a: a * b, help: b === 1 ? `<div class="steps">Když násobím jedničkou, číslo se nezmění.</div>`
+  : `<div class="steps">Řada ${a}: ${Array.from({ length: b - 1 }, (_, k) => a * (k + 1)).join(", ")}, ?</div>` });
+const div = (a, b) => ({ q: `${a * b} : ${b}`, a, help: `<div class="steps">Kolikrát se ${b} vejde do ${a * b}?<br>? · ${b} = ${a * b}</div>` });
+const genMala = () => mul(rnd(2, 10), rnd(2, 10));
+const genDiv = () => div(rnd(2, 10), rnd(2, 10));
+function genVelka() {
+  const a = rnd(11, 20), b = rnd(2, 9), t = a > 19 ? 10 : a - 10;
+  if (Math.random() < .7) return { q: `${a} · ${b}`, a: a * b, help: `<div class="steps">${a} · ${b} = 10 · ${b} + ${t} · ${b}<br>= ${10 * b} + ${t * b} = ?</div>` };
+  return { q: `${a * b} : ${b}`, a, help: `<div class="steps">${a * b} = ${10 * b} + ${t * b}<br>${10 * b} : ${b} = 10, ${t * b} : ${b} = ${t}<br>10 + ${t} = ?</div>` };
+}
+
+function learn(n = 7) {
+  const tips = [
+    ["🔄 Činitele můžu prohodit: 3 · 7 = 7 · 3 = 21", "Činitele můžu prohodit. 3 krát 7 je stejně jako 7 krát 3, to je 21."],
+    ["➗ Dělení je opak násobení: 56 : 7 = 8, protože 8 · 7 = 56", "Dělení je opak násobení. 56 děleno 7 je 8, protože 8 krát 7 je 56."],
+    ["💪 Velká násobilka: 14 · 6 = 10 · 6 + 4 · 6 = 60 + 24 = 84", "Velká násobilka. 14 krát 6: nejdřív 10 krát 6 je 60, pak 4 krát 6 je 24. 60 plus 24 je 84."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Malá a velká násobilka">📖 Malá a velká násobilka <span class="ico">🔊</span></h2>
+    ${tips.map(([t, s]) => `<div class="box clk" data-say="${s}">${t} <span class="ico">🔊</span></div>`).join("")}
+    <p class="center"><b>Vyber řadu:</b></p>
+    <div class="rows">${Array.from({ length: 20 }, (_, k) => k + 1).map(k => `<button data-n="${k}" class="${k === n ? "sel" : ""}">${k}</button>`).join("")}</div>
+    <div class="row">${Array.from({ length: 10 }, (_, k) => k + 1).map(k => czSay(`${k} · ${n} = ${k * n}`, czMath(`${k} · ${n} = ${k * n}`))).join("")}</div>`;
+  czBind();
+  app.querySelectorAll(".rows button").forEach(b => b.onclick = () => learn(+b.dataset.n));
+}
+
+function row() {
+  app.innerHTML = `<h2 class="clk" data-say="Kterou řadu chceš procvičit?">🎯 Kterou řadu chceš procvičit? <span class="ico">🔊</span></h2>
+    <div class="rows">${Array.from({ length: 9 }, (_, k) => k + 2).map(k => `<button data-n="${k}">${k}</button>`).join("")}</div>`;
+  czBind();
+  app.querySelectorAll(".rows button").forEach(b => b.onclick = () => {
+    const n = +b.dataset.n, again = () => cvicNumbers({ title: `🎯 Řada ${n}`, gen: () => Math.random() < .6 ? mul(n, rnd(1, 10)) : div(rnd(1, 10), n), again, count: 12 });
+    again();
+  });
+}
+const mala = () => cvicNumbers({ title: "✖️ Malá násobilka", gen: genMala, again: mala, count: 12 });
+const deleni = () => cvicNumbers({ title: "➗ Dělení", gen: genDiv, again: deleni, count: 12 });
+const velka = () => cvicNumbers({ title: "💪 Velká násobilka", gen: genVelka, again: velka });
+const sprint = () => cvicSprint({ title: "Minutovka – násobilka", gen: () => Math.random() < .6 ? genMala() : genDiv(), id: "mala" });
+
+skolaStart({ scoreKey: "mNasobilkaScore", english: false, modes: { learn: () => learn(), row, mala, deleni, velka, sprint } });
+</script>
+</body>
+</html>

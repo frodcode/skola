@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
+<title>Slovní úlohy 🧮</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .task .txt { font-size: 1.35rem; line-height: 1.5; font-weight: normal; color: #222; text-align: left; }
+  .helpbox { font-size: 1.15rem; }
+  .kw td { padding: 4px 8px; }
+  .kw td:first-child { width: 2.5em; }
+  .ex { font-size: 1.2rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🧮 Slovní úlohy</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="simple">1️⃣ Jednoduché</button>
+  <button data-mode="compare">⚖️ O kolik? Kolikrát?</button>
+  <button data-mode="twoStep">2️⃣ Složené</button>
+  <button data-mode="mixed">🔀 Smíšené</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const KRAT = ["", "", "dvakrát", "třikrát", "čtyřikrát", "pětkrát", "šestkrát", "sedmkrát", "osmkrát", "devětkrát"];
+/* t – zadání, z – zápis, c – výpočet, r – výsledek, o – odpověď */
+const SIMPLE = [
+  () => { const a = rnd(120, 600), b = rnd(15, 300), r = a + b; return { t: `V knihovně bylo ${a} knih. Přivezli dalších ${b} knih. Kolik knih je teď v knihovně?`,
+    z: [`bylo: ${a} knih`, `přivezli: ${b} knih`, `je teď: ? knih`], c: `${a} + ${b}`, r, o: `V knihovně je teď ${r} knih.` }; },
+  () => { const a = rnd(50, 400), b = rnd(50, 400), r = a + b; return { t: `Petr ušetřil ${a} Kč a Jana ${b} Kč. Kolik korun ušetřili dohromady?`,
+    z: [`Petr: ${a} Kč`, `Jana: ${b} Kč`, `dohromady: ? Kč`], c: `${a} + ${b}`, r, o: `Dohromady ušetřili ${r} Kč.` }; },
+  () => { const a = rnd(40, 300), b = rnd(5, a - 5), r = a - b; return { t: `Na parkovišti stálo ${a} aut. Potom ${b} aut odjelo. Kolik aut zůstalo na parkovišti?`,
+    z: [`stálo: ${a} aut`, `odjelo: ${b} aut`, `zůstalo: ? aut`], c: `${a} − ${b}`, r, o: `Na parkovišti zůstalo ${r} aut.` }; },
+  () => { const a = rnd(300, 990), b = rnd(100, a - 10), r = a - b; return { t: `Kolo stojí ${a} Kč. Tomáš má našetřeno ${b} Kč. Kolik korun mu ještě chybí?`,
+    z: [`kolo: ${a} Kč`, `Tomáš má: ${b} Kč`, `chybí: ? Kč`], c: `${a} − ${b}`, r, o: `Tomášovi chybí ${r} Kč.` }; },
+  () => { const a = rnd(6, 12), b = rnd(5, 9), r = a * b; return { t: `V jedné krabici je ${a} pastelek. Kolik pastelek je v ${b} krabicích?`,
+    z: [`1 krabice: ${a} pastelek`, `${b} krabic: ? pastelek`], c: `${a} · ${b}`, r, o: `V ${b} krabicích je ${r} pastelek.` }; },
+  () => { const a = rnd(5, 11) * 10, b = rnd(5, 9), r = a * b; return { t: `Jeden lístek do kina stojí ${a} Kč. Kolik korun zaplatí za lístky ${b} dětí?`,
+    z: [`1 lístek: ${a} Kč`, `${b} lístků: ? Kč`], c: `${a} · ${b}`, r, o: `${b} dětí zaplatí ${r} Kč.` }; },
+  () => { const a = rnd(5, 12), b = rnd(5, 9), c = a * b; return { t: `Maminka rozdělila ${c} bonbonů spravedlivě mezi ${b} dětí. Kolik bonbonů dostalo každé dítě?`,
+    z: [`bonbonů: ${c}`, `dětí: ${b}`, `každé dítě: ?`], c: `${c} : ${b}`, r: a, o: `Každé dítě dostalo ${a} bonbonů.` }; },
+  () => { const a = rnd(5, 8), b = rnd(5, 9), c = a * b; return { t: `Na výlet jelo ${c} dětí. Paní učitelka je rozdělila do skupin po ${a}. Kolik skupin vzniklo?`,
+    z: [`dětí: ${c}`, `v 1 skupině: ${a}`, `skupin: ?`], c: `${c} : ${a}`, r: b, o: `Vzniklo ${b} skupin.` }; },
+];
+const COMPARE = [
+  () => { const a = rnd(200, 900), b = rnd(50, a - 20), r = a - b; return { t: `Jana má ${a} Kč, Petr má ${b} Kč. O kolik korun má Jana více než Petr?`,
+    z: [`Jana: ${a} Kč`, `Petr: ${b} Kč`, `o kolik více: ? Kč`], c: `${a} − ${b}`, r, o: `Jana má o ${r} Kč více než Petr.`, tip: "O kolik více? → odčítám: větší − menší" }; },
+  () => { const b = rnd(20, 300), d = rnd(5, 200), r = b + d; return { t: `Petr má ${b} kuliček. Jana má o ${d} kuliček více. Kolik kuliček má Jana?`,
+    z: [`Petr: ${b} kuliček`, `Jana: o ${d} více`, `Jana: ? kuliček`], c: `${b} + ${d}`, r, o: `Jana má ${r} kuliček.` }; },
+  () => { const a = rnd(20, 90), d = rnd(5, a - 5), r = a - d; return { t: `Tatínek ujel na kole ${a} km. Syn ujel o ${d} km méně. Kolik kilometrů ujel syn?`,
+    z: [`tatínek: ${a} km`, `syn: o ${d} km méně`, `syn: ? km`], c: `${a} − ${d}`, r, o: `Syn ujel ${r} km.` }; },
+  () => { const a = rnd(5, 20), k = rnd(2, 5), r = a * k; return { t: `Eva má ${a} nálepek. Klára jich má ${KRAT[k]} více. Kolik nálepek má Klára?`,
+    z: [`Eva: ${a} nálepek`, `Klára: ${k}krát více`, `Klára: ? nálepek`], c: `${a} · ${k}`, r, o: `Klára má ${r} nálepek.` }; },
+  () => { const p = rnd(20, 60), k = rnd(2, 4), c = p * k; return { t: `Lístek pro dospělého stojí ${c} Kč. Lístek pro dítě je ${KRAT[k]} levnější. Kolik korun stojí lístek pro dítě?`,
+    z: [`dospělý: ${c} Kč`, `dítě: ${k}krát méně`, `dítě: ? Kč`], c: `${c} : ${k}`, r: p, o: `Lístek pro dítě stojí ${p} Kč.` }; },
+  () => { const p = rnd(15, 60), k = rnd(2, 9), c = p * k; return { t: `Hrnek stojí ${p} Kč a konvice ${c} Kč. Kolikrát je konvice dražší než hrnek?`,
+    z: [`hrnek: ${p} Kč`, `konvice: ${c} Kč`, `kolikrát dražší: ?`], c: `${c} : ${p}`, r: k, o: `Konvice je ${KRAT[k]} dražší než hrnek.`, tip: "Kolikrát? → dělím: větší : menší" }; },
+];
+const TWO = [
+  () => { const a = rnd(3, 5), b = rnd(5, 10), c = rnd(25, 45), r = a * b + c; return { t: `Maminka koupila ${b} rohlíků po ${a} Kč a jeden chléb za ${c} Kč. Kolik korun zaplatila?`,
+    z: [`rohlíky: ${b} · ${a} Kč`, `chléb: ${c} Kč`, `celkem: ? Kč`], c: `${b} · ${a} + ${c}`, r, o: `Maminka zaplatila ${r} Kč.`, steps: `${b} · ${a} = ${a * b}<br>${a * b} + ${c} = ?` }; },
+  () => { const a = rnd(80, 300), b = rnd(10, 60), c = rnd(5, 60), r = a - b + c; return { t: `Ve vlaku jelo ${a} lidí. Na zastávce ${b} lidí vystoupilo a ${c} lidí nastoupilo. Kolik lidí jede teď ve vlaku?`,
+    z: [`jelo: ${a}`, `vystoupilo: ${b}`, `nastoupilo: ${c}`, `jede teď: ?`], c: `${a} − ${b} + ${c}`, r, o: `Ve vlaku jede teď ${r} lidí.`, steps: `${a} − ${b} = ${a - b}<br>${a - b} + ${c} = ?` }; },
+  () => { const per = rnd(5, 12), k = rnd(5, 8), b = rnd(5, 30), a = per * k + b; return { t: `Babička natrhala ${a} jablek. Sousedce dala ${b} jablek a zbytek rozdělila rovným dílem do ${k} košíků. Kolik jablek je v jednom košíku?`,
+    z: [`natrhala: ${a}`, `sousedce: ${b}`, `košíků: ${k}`, `v 1 košíku: ?`], c: `(${a} − ${b}) : ${k}`, r: per, o: `V jednom košíku je ${per} jablek.`, steps: `${a} − ${b} = ${a - b}<br>${a - b} : ${k} = ?` }; },
+  () => { const k = rnd(5, 9), p = rnd(9, 20), a = k * p + rnd(5, 100), r = a - k * p; return { t: `Tomáš má ${a} Kč. Koupil si ${k} sešitů po ${p} Kč. Kolik korun mu zbylo?`,
+    z: [`má: ${a} Kč`, `sešity: ${k} · ${p} Kč`, `zbylo: ? Kč`], c: `${a} − ${k} · ${p}`, r, o: `Tomášovi zbylo ${r} Kč.`, steps: `${k} · ${p} = ${k * p}<br>${a} − ${k * p} = ?` }; },
+  () => { const t = rnd(5, 9), z = rnd(18, 28), n = rnd(5, 20), r = t * z - n; return { t: `Ve škole je ${t} tříd a v každé třídě je ${z} žáků. Dnes je ${n} žáků nemocných. Kolik žáků je dnes ve škole?`,
+    z: [`tříd: ${t}`, `v 1 třídě: ${z} žáků`, `nemocných: ${n}`, `ve škole: ?`], c: `${t} · ${z} − ${n}`, r, o: `Dnes je ve škole ${r} žáků.`, steps: `${t} · ${z} = ${t * z}<br>${t * z} − ${n} = ?` }; },
+];
+
+function solve(title, gens, again, count = 6) {
+  const items = [], seen = new Set();
+  for (let g = 0; items.length < count && g < 200; g++) {
+    const k = items.length % gens.length, x = (gens.length >= count ? shuffle(gens)[0] : gens[k])();
+    if (seen.has(x.t.slice(0, 12)) && gens.length >= count) continue;
+    seen.add(x.t.slice(0, 12)); items.push(x);
+  }
+  cvicAsk({
+    title, items: shuffle(items), again, numeric: true, placeholder: "výsledek", delay: 4000,
+    prompt: x => `<div class="txt">${x.t}</div>`,
+    say: x => speakCz(czClean(x.t), 0.8),
+    answer: x => x.r,
+    check: (x, v) => +v.replace(/\s/g, "") === x.r,
+    help: x => `<b>Zápis:</b><br>${x.z.join("<br>")}<br><b>Výpočet:</b><br>${x.steps || `${x.c} = ?`}${x.tip ? `<span class="note">💡 ${x.tip}</span>` : ""}`,
+    solution: x => `${x.c} = ${x.r}<br>${x.o}`,
+    after: x => speakCz(x.o),
+  });
+}
+const simple = () => solve("1️⃣ Jednoduché slovní úlohy", SIMPLE, simple);
+const compare = () => solve("⚖️ O kolik? Kolikrát?", COMPARE, compare);
+const twoStep = () => solve("2️⃣ Složené slovní úlohy", TWO, twoStep, 5);
+const mixed = () => solve("🔀 Smíšené slovní úlohy", [...SIMPLE, ...COMPARE, ...TWO], mixed, 8);
+
+function learn() {
+  const steps = [
+    ["1️⃣ Pozorně si přečtu zadání.", "Nejdřív si pozorně přečtu zadání."],
+    ["2️⃣ Udělám zápis: co vím a co hledám.", "Pak udělám zápis: co vím a co hledám."],
+    ["3️⃣ Vypočítám příklad.", "Potom vypočítám příklad."],
+    ["4️⃣ Napíšu odpověď celou větou.", "Nakonec napíšu odpověď celou větou."],
+  ];
+  const kw = [
+    ["➕", "dohromady, celkem, přibylo, o … více", "Sčítám, když je v zadání: dohromady, celkem, přibylo, nebo o něco více."],
+    ["➖", "zůstalo, odjelo, chybí, o … méně", "Odčítám, když je v zadání: zůstalo, odjelo, chybí, nebo o něco méně."],
+    ["✖️", "v každé, po …, … krát více", "Násobím, když je v zadání: v každé, po, nebo několikrát více."],
+    ["➗", "rozdělit, spravedlivě, … krát méně", "Dělím, když je v zadání: rozdělit, spravedlivě, nebo několikrát méně."],
+    ["❓", "O kolik? → odčítám · Kolikrát? → dělím", "Pozor: když se ptám o kolik, odčítám. Když se ptám kolikrát, dělím."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Jak řešit slovní úlohy">📖 Jak řešit slovní úlohy <span class="ico">🔊</span></h2>
+    ${steps.map(([t, s]) => `<div class="box clk" data-say="${s}">${t} <span class="ico">🔊</span></div>`).join("")}
+    <h3>🔑 Nápovědná slova</h3>
+    <table class="t kw">${kw.map(([e, t, s]) => `<tr class="clk" data-say="${s}"><td>${e}</td><td>${t} <span class="ico">🔊</span></td></tr>`).join("")}</table>
+    <div class="box clk ex" data-say="Příklad. V knihovně bylo 356 knih. Přivezli dalších 124 knih. Kolik knih je teď v knihovně? Zápis: bylo 356 knih, přivezli 124 knih. Výpočet: 356 plus 124 je 480. Odpověď: V knihovně je teď 480 knih.">
+      <b>Příklad:</b> V knihovně bylo 356 knih. Přivezli dalších 124 knih. Kolik knih je teď v knihovně? <span class="ico">🔊</span><br>
+      <b>Zápis:</b> bylo 356 knih, přivezli 124 knih, je teď ? knih<br>
+      <b>Výpočet:</b> 356 + 124 = 480<br>
+      <b>Odpověď:</b> V knihovně je teď 480 knih.</div>`;
+  czBind();
+}
+
+skolaStart({ scoreKey: "mSlovniUlohyScore", english: false, modes: { learn, simple, compare, twoStep, mixed } });
+</script>
+</body>
+</html>

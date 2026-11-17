@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A4%94%3C/text%3E%3C/svg%3E">
+<title>Logické úlohy 🤔</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .task.txt, .task .txt { font-size: 1.35rem; line-height: 1.5; font-weight: normal; color: #222; margin-bottom: 8px; }
+  .seq { letter-spacing: 1px; }
+  .steps { text-align: center; font-size: 1.3rem; }
+  .ex { font-size: 1.3rem; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🤔 Logické úlohy</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="rady">🔢 Číselné řady</button>
+  <button data-mode="missing">❓ Chybějící číslo</button>
+  <button data-mode="think">💭 Myslím si číslo</button>
+  <button data-mode="order">📏 Kdo je nej…?</button>
+  <button data-mode="puzzles">🧩 Hádanky</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const KRAT = ["", "", "dvakrát", "třikrát", "čtyřikrát", "pětkrát", "šestkrát", "sedmkrát", "osmkrát", "devětkrát"];
+
+/* číselná řada: 5 známých členů a šestý hledaný; ops – popis kroků pro nápovědu */
+function genSeq() {
+  const t = rnd(0, 5), s = [];
+  let ops = [];
+  if (t === 0) { const d = rnd(2, 12); s.push(rnd(1, 50)); ops = Array(5).fill(`+${d}`); }
+  if (t === 1) { const d = rnd(2, 12); s.push(rnd(6 * d, 150)); ops = Array(5).fill(`−${d}`); }
+  if (t === 2) { s.push(rnd(1, 6)); ops = Array(5).fill("·2"); }
+  if (t === 3) { const a = rnd(3, 9), b = rnd(1, a - 1); s.push(rnd(5, 30)); ops = [`+${a}`, `−${b}`, `+${a}`, `−${b}`, `+${a}`]; }
+  if (t === 4) { const d = rnd(1, 3); s.push(rnd(1, 20)); ops = [0, 1, 2, 3, 4].map(k => `+${d + k}`); }
+  if (t === 5) { const d = pick([15, 25, 50, 100]); s.push(rnd(1, 40) * 5); ops = Array(5).fill(`+${d}`); }
+  ops.forEach(o => { const v = +o.slice(1), l = s[s.length - 1]; s.push(o[0] === "+" ? l + v : o[0] === "−" ? l - v : l * v); });
+  return { s, ops };
+}
+function rady() {
+  const items = Array.from({ length: 8 }, genSeq);
+  cvicAsk({
+    title: "🔢 Jaké číslo bude dál?", items, again: rady, numeric: true, placeholder: "další číslo",
+    prompt: x => `<span class="seq">${x.s.slice(0, 5).join(", ")}, <span class="gap">?</span></span>`,
+    say: x => speakCz(`Jaké číslo bude dál? ${x.s.slice(0, 5).join(", ")}.`, 0.85),
+    answer: x => x.s[5],
+    help: x => `<div class="steps">${x.s.slice(0, 5).map((v, k) => k < 4 ? `${v} <sub>${x.ops[k]}</sub>` : `${v} <sub>?</sub> ?`).join(" ")}</div>`,
+    solution: x => `${x.s.join(", ")}`,
+    after: x => speakCz(`Další číslo je ${x.s[5]}.`),
+  });
+}
+
+function genMissing() {
+  const t = rnd(0, 7);
+  if (t < 2) { const a = rnd(10, 500), b = rnd(10, 1000 - a), c = a + b;
+    return t ? { q: `? + ${b} = ${c}`, a, help: `${c} − ${b} = ?` } : { q: `${a} + ? = ${c}`, a: b, help: `${c} − ${a} = ?` }; }
+  if (t < 4) { const a = rnd(100, 999), b = rnd(10, a - 10), c = a - b;
+    return t === 2 ? { q: `? − ${b} = ${c}`, a, help: `${c} + ${b} = ?` } : { q: `${a} − ? = ${c}`, a: b, help: `${a} − ${c} = ?` }; }
+  const a = rnd(2, 10), b = rnd(2, 10), c = a * b;
+  if (t === 4) return { q: `? · ${b} = ${c}`, a, help: `${c} : ${b} = ?` };
+  if (t === 5) return { q: `${a} · ? = ${c}`, a: b, help: `${c} : ${a} = ?` };
+  if (t === 6) return { q: `? : ${b} = ${a}`, a: c, help: `${a} · ${b} = ?` };
+  return { q: `${c} : ? = ${a}`, a: b, help: `${c} : ${a} = ?` };
+}
+function missing() {
+  const items = Array.from({ length: 10 }, genMissing);
+  cvicAsk({
+    title: "❓ Doplň chybějící číslo", items, again: missing, numeric: true, placeholder: "chybějící číslo",
+    prompt: x => x.q.replace("?", `<span class="gap">?</span>`),
+    say: x => speakCz(czMath(x.q)),
+    answer: x => x.a,
+    help: x => `<div class="steps">Použij opačný počet:<br>${x.help}</div>`,
+    solution: x => x.q.replace("?", `<u>${x.a}</u>`),
+    after: x => speakCz(czMath(x.q.replace("?", x.a))),
+  });
+}
+
+function genThink() {
+  const t = rnd(0, 4), x = rnd(5, 60);
+  if (t === 0) { const b = rnd(5, 99); return { q: `Když k němu přičtu ${b}, dostanu ${x + b}.`, a: x, help: `${x + b} − ${b} = ?` }; }
+  if (t === 1) { const b = rnd(5, 99); return { q: `Když od něj odečtu ${b}, dostanu ${x}.`, a: x + b, help: `${x} + ${b} = ?` }; }
+  if (t === 2) { const a = rnd(2, 10), b = rnd(2, 9); return { q: `Když ho vezmu ${KRAT[b]}, dostanu ${a * b}.`, a, help: `${a * b} : ${b} = ?` }; }
+  if (t === 3) { const a = rnd(2, 10), b = rnd(2, 9); return { q: `Když ho rozdělím na ${b} ${b < 5 ? "stejné části" : "stejných částí"}, bude mít každá část ${a}.`, a: a * b, help: `${a} · ${b} = ?` }; }
+  const a = rnd(2, 20), b = rnd(2, 10);
+  return { q: `Když k němu přičtu ${b} a výsledek vezmu dvakrát, dostanu ${(a + b) * 2}.`, a, help: `${(a + b) * 2} : 2 = ${a + b}<br>${a + b} − ${b} = ?` };
+}
+function think() {
+  const items = Array.from({ length: 8 }, genThink);
+  cvicAsk({
+    title: "💭 Myslím si číslo", items, again: think, numeric: true, placeholder: "číslo",
+    prompt: x => `<div class="task txt">💭 Myslím si číslo. ${x.q} Jaké číslo si myslím?</div>`,
+    say: x => speakCz(`Myslím si číslo. ${x.q} Jaké číslo si myslím?`, 0.85),
+    answer: x => x.a,
+    help: x => `<div class="steps">Počítej pozpátku:<br>${x.help}</div>`,
+    solution: x => x.a,
+    after: x => speakCz(`Myslím si číslo ${x.a}.`),
+  });
+}
+
+const NAMES = ["Petr", "Jana", "Eva", "Tomáš", "Klára", "Ondra", "Lucie", "Marek"];
+const PROPS = [["vyšší", "menší", "nejvyšší", "nejmenší"], ["starší", "mladší", "nejstarší", "nejmladší"], ["rychlejší", "pomalejší", "nejrychlejší", "nejpomalejší"]];
+function order() {
+  const items = Array.from({ length: 8 }, () => {
+    const p = pick(PROPS), names = shuffle(NAMES).slice(0, Math.random() < .5 ? 3 : 4);
+    const st = shuffle(names.slice(1).map((b, k) => { const a = names[k]; return Math.random() < .5 ? `${a} je ${p[0]} než ${b}.` : `${b} je ${p[1]} než ${a}.`; }));
+    const top = Math.random() < .5, a = top ? names[0] : names[names.length - 1], q = `Kdo je ${top ? p[2] : p[3]}?`;
+    return { q: `<div class="txt">${st.join("<br>")}</div>${q}`, say: `${st.join(" ")} ${q}`, rate: 0.85, opts: shuffle([...names]), a,
+      why: `Pořadí: ${names.join(" › ")} (${p[0]} → ${p[1]})` };
+  });
+  cvicChoice({ title: "📏 Kdo je nej…?", items, again: order });
+}
+
+const PUZZLES = [
+  ["Za 3 roky bude Aničce 12 let. Kolik let je Aničce teď?", "9", ["15", "12", "6"], "12 − 3 = 9"],
+  ["Na stromě sedí 8 vrabců. 3 odletí a 2 přiletí. Kolik vrabců je teď na stromě?", "7", ["13", "3", "9"], "8 − 3 + 2 = 7"],
+  ["Tatínek má 4 dcery. Každá dcera má jednoho bratra. Kolik dětí má tatínek?", "5", ["8", "4", "6"], "Všechny dcery mají stejného bratra: 4 + 1 = 5"],
+  ["Kolik nohou mají dohromady 3 slepice a 2 psi?", "14", ["10", "20", "12"], "3 · 2 + 2 · 4 = 6 + 8 = 14"],
+  ["Plot má 5 sloupků. Mezi každými dvěma sousedními sloupky jsou 2 metry. Jak dlouhý je plot?", "8 m", ["10 m", "12 m", "5 m"], "Mezi 5 sloupky jsou jen 4 mezery: 4 · 2 = 8 m"],
+  ["Co je těžší: kilogram peří, nebo kilogram železa?", "obojí stejně", ["železo", "peří"], "Obojí váží 1 kilogram."],
+  ["Děti stojí v řadě. Jana je třetí zepředu a zároveň třetí zezadu. Kolik dětí stojí v řadě?", "5", ["6", "3", "7"], "2 děti před Janou + Jana + 2 děti za ní = 5"],
+  ["Šnek leze na zeď vysokou 5 metrů. Přes den vyleze 3 metry, v noci sklouzne 2 metry dolů. Kolikátý den bude nahoře?", "3. den", ["5. den", "2. den", "4. den"], "Po 1. noci je ve výšce 1 m, po 2. noci ve 2 m, 3. den vyleze na 5 m."],
+  ["Pavlovi je o 3 roky víc než Evě. Evě je 7 let. Kolik let je Pavlovi?", "10", ["4", "7", "21"], "7 + 3 = 10"],
+  ["Jaké je největší trojciferné číslo?", "999", ["100", "1000", "900"], "Trojciferné číslo má 3 číslice; největší je 999."],
+  ["Kolik je dvojciferných čísel, která mají obě číslice stejné?", "9", ["10", "11", "8"], "11, 22, 33, 44, 55, 66, 77, 88, 99"],
+  ["Jaké je nejmenší trojciferné číslo, které má všechny číslice různé?", "102", ["100", "123", "111"], "100 a 101 mají stejné číslice, 102 už ne."],
+  ["Hodiny ukazují 9 hodin ráno. Kolik hodin bude za 5 hodin?", "14:00", ["4:00", "13:00", "15:00"], "9 + 5 = 14, tedy 2 hodiny odpoledne."],
+  ["Ve třídě je 25 dětí. Dívek je o 3 víc než chlapců. Kolik je ve třídě chlapců?", "11", ["14", "22", "12"], "25 − 3 = 22, 22 : 2 = 11 chlapců a 11 + 3 = 14 dívek"],
+];
+function puzzles() {
+  const items = shuffle(PUZZLES).slice(0, 8).map(([q, a, bad, why]) => ({ q: `<div class="txt">${q}</div>`, say: q, rate: 0.85, opts: shuffle([a, ...bad]), a, why }));
+  cvicChoice({ title: "🧩 Hádanky", items, again: puzzles });
+}
+
+function learn() {
+  const tips = [
+    ["🔢 Číselná řada: zjisti, o kolik se čísla mění.", "2, 5, 8, 11, ?", "+3 → 14", "Číselná řada: zjisti, o kolik se čísla mění. 2, 5, 8, 11. Pokaždé plus 3, další je 14."],
+    ["❓ Chybějící číslo: použij opačný počet.", "? + 25 = 60", "60 − 25 = 35", "Chybějící číslo: použij opačný počet. Kolik plus 25 je 60? 60 mínus 25 je 35."],
+    ["💭 Myslím si číslo: počítej pozpátku.", "Když k němu přičtu 7, dostanu 20.", "20 − 7 = 13", "Myslím si číslo. Když k němu přičtu 7, dostanu 20. Počítám pozpátku: 20 mínus 7 je 13."],
+    ["✅ Zkouška: výsledek dosaď zpátky.", "35 + 25 = 60 ✔️", "", "Zkouška: výsledek dosadím zpátky. 35 plus 25 je 60, sedí to."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Logické úlohy">📖 Logické úlohy <span class="ico">🔊</span></h2>
+    ${tips.map(([t, e, r, s]) => `<div class="box clk" data-say="${s}">${t} <span class="ico">🔊</span><div class="ex"><b>${e}</b> ${r}</div></div>`).join("")}
+    <div class="box clk" data-say="Když si nevíš rady, nakresli si obrázek nebo si úlohu zahraj s předměty.">✏️ Když si nevíš rady, nakresli si obrázek. <span class="ico">🔊</span></div>`;
+  czBind();
+}
+
+skolaStart({ scoreKey: "mLogickeUlohyScore", english: false, modes: { learn, rady, missing, think, order, puzzles } });
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E">
+<title>Význam slov 💬</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .task { font-size: 1.5rem; }
+  .task .w1 { font-size: 2rem; display: block; margin-top: 4px; }
+  .box h3 { margin: 4px 0 6px; }
+  .box .sp { margin: 2px; }
+  .mean { text-align: left; display: inline-block; font-size: 1.25rem; font-weight: normal; }
+  .mean div { margin: 4px 0; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>💬 Význam slov</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="nadSort">🗂️ Nadřazená a podřazená</button>
+  <button data-mode="nadQuiz">⬆️ Najdi nadřazené</button>
+  <button data-mode="odd">🧺 Co nepatří?</button>
+  <button data-mode="syn">🤝 Synonyma</button>
+  <button data-mode="ant">↔️ Antonyma</button>
+  <button data-mode="multi">🔀 Mnohoznačná</button>
+  <button data-mode="rel">❓ Jaká jsou to slova?</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* slova nadřazená (n) a podřazená (p); podřazená slova jedné skupiny jsou navzájem souřadná */
+const NAD = [
+  { n: "ovoce", p: ["jablko", "hruška", "švestka", "banán", "meruňka"] },
+  { n: "zelenina", p: ["mrkev", "okurka", "paprika", "cibule", "petržel"] },
+  { n: "nábytek", p: ["stůl", "židle", "skříň", "postel", "křeslo"] },
+  { n: "nádobí", p: ["hrnek", "talíř", "hrnec", "pánev", "miska"] },
+  { n: "oblečení", p: ["kalhoty", "svetr", "sukně", "tričko", "bunda"] },
+  { n: "ptáci", p: ["vrabec", "sýkorka", "kos", "čáp", "vlaštovka"] },
+  { n: "stromy", p: ["dub", "buk", "smrk", "bříza", "lípa"] },
+  { n: "květiny", p: ["růže", "tulipán", "sedmikráska", "pampeliška", "fialka"] },
+  { n: "dopravní prostředky", p: ["auto", "vlak", "autobus", "tramvaj", "letadlo"] },
+  { n: "hudební nástroje", p: ["housle", "klavír", "kytara", "flétna", "buben"] },
+  { n: "nářadí", p: ["kladivo", "pila", "šroubovák", "kleště", "hoblík"] },
+  { n: "pečivo", p: ["rohlík", "chléb", "houska", "bageta", "vánočka"] },
+];
+/* k: druh slova – nabídky v kvízu jsou ze stejného druhu */
+const SYN = [
+  ["hezký", "pěkný", "a"], ["malý", "drobný", "a"], ["chytrý", "bystrý", "a"], ["smutný", "zarmoucený", "a"],
+  ["statečný", "odvážný", "a"], ["veselý", "radostný", "a"],
+  ["doktor", "lékař", "n"], ["kamarád", "přítel", "n"], ["chlapec", "kluk", "n"], ["dívka", "holka", "n"],
+  ["obličej", "tvář", "n"], ["začátek", "počátek", "n"], ["brambory", "zemáky", "n"],
+  ["mluvit", "hovořit", "v"], ["běžet", "utíkat", "v"], ["plakat", "brečet", "v"], ["dívat se", "koukat", "v"], ["pracovat", "dělat", "v"],
+];
+const ANT = [
+  ["velký", "malý", "a"], ["vysoký", "nízký", "a"], ["plný", "prázdný", "a"], ["tvrdý", "měkký", "a"], ["dlouhý", "krátký", "a"],
+  ["veselý", "smutný", "a"], ["silný", "slabý", "a"], ["dobrý", "zlý", "a"], ["mladý", "starý", "a"], ["teplý", "studený", "a"],
+  ["den", "noc", "n"], ["začátek", "konec", "n"], ["světlo", "tma", "n"], ["léto", "zima", "n"], ["ráno", "večer", "n"], ["pravda", "lež", "n"],
+  ["otevřít", "zavřít", "v"], ["smát se", "plakat", "v"], ["přijít", "odejít", "v"], ["kupovat", "prodávat", "v"], ["zapnout", "vypnout", "v"],
+  ["rychle", "pomalu", "r"], ["nahoře", "dole", "r"], ["vždy", "nikdy", "r"], ["blízko", "daleko", "r"], ["brzy", "pozdě", "r"],
+];
+const MULTI = [
+  { w: "koruna", m: ["👑 na hlavě krále", "🌳 horní část stromu", "🪙 peníze"] },
+  { w: "list", m: ["🍃 roste na stromě", "📄 je v sešitě, píšeme na něj"] },
+  { w: "ucho", m: ["👂 tím slyšíme", "☕ držíme za něj hrnek", "🪡 má ho jehla"] },
+  { w: "jazyk", m: ["👅 máme ho v puse", "🗣️ čeština, angličtina", "👟 je v botě pod tkaničkami"] },
+  { w: "noha", m: ["🦵 má ji člověk", "🪑 má ji stůl i židle"] },
+  { w: "hlava", m: ["🙂 má ji člověk", "🥬 má ji zelí", "🔩 má ji hřebík"] },
+  { w: "myš", m: ["🐭 malé zvíře", "🖱️ ovládáme jí počítač"] },
+  { w: "zámek", m: ["🔒 zamykáme ho klíčem", "🏰 velká budova, kde bydleli šlechtici"] },
+  { w: "pero", m: ["🪶 má ho pták", "🖊️ píšeme jím"] },
+  { w: "vlna", m: ["🌊 na moři", "🐑 z ovce, pletou se z ní svetry"] },
+  { w: "klíč", m: ["🔑 odemykáme jím dveře", "🎼 značka na začátku notové osnovy", "🔧 nářadí na šrouby"] },
+  { w: "kolo", m: ["🚲 jezdíme na něm", "🛞 má ho auto", "🏁 jedno kolo soutěže"] },
+  { w: "hřeben", m: ["💇 česáme se jím", "⛰️ horský hřeben", "🐓 má ho kohout"] },
+];
+const SINGLE = ["mrkev", "polštář", "kalhoty", "tulipán", "sýkorka", "okurka", "rohlík", "deštník", "kapesník", "ponožka", "švestka"];
+const TYPES = { nad: "nadřazené a podřazené", sour: "souřadná", syn: "souznačná (synonyma)", ant: "protikladná (antonyma)" };
+
+const opt4 = (a, others) => shuffle([a, ...shuffle(others.filter(x => x !== a)).slice(0, 3)]);
+
+function learn() {
+  const sec = (title, say, body) => `<div class="box"><h3 class="clk" data-say="${say}">${title} <span class="ico">🔊</span></h3>${body}</div>`;
+  const words = ws => ws.map(w => czSay(w)).join("");
+  app.innerHTML = `<h2 class="clk" data-say="Význam slov">📖 Význam slov <span class="ico">🔊</span></h2>
+    ${sec("⬆️ Slova nadřazená a podřazená", "Slovo nadřazené má širší, obecnější význam. Zahrnuje v sobě slova podřazená. Například ovoce je slovo nadřazené, jablko, hruška a švestka jsou slova podřazená.",
+      `<p>Slovo <b>nadřazené</b> má širší význam a zahrnuje slova <b>podřazená</b>.</p>
+       <p>${czSay("<b>ovoce</b>", "ovoce")} → ${words(["jablko", "hruška", "švestka"])}</p>
+       <p>${czSay("<b>nábytek</b>", "nábytek")} → ${words(["stůl", "židle", "skříň"])}</p>`)}
+    ${sec("🧺 Slova souřadná", "Slova souřadná mají stejné slovo nadřazené. Jsou si rovna, stojí vedle sebe. Například jablko, hruška a švestka jsou slova souřadná, všechna jsou ovoce.",
+      `<p>Slova <b>souřadná</b> mají <b>stejné nadřazené slovo</b> – stojí vedle sebe.</p>
+       <p>${words(["jablko", "hruška", "švestka"])} – všechno je ovoce</p>
+       <p>${words(["dub", "buk", "smrk"])} – všechno jsou stromy</p>`)}
+    ${sec("🤝 Slova souznačná (synonyma)", "Slova souznačná, synonyma, mají stejný nebo podobný význam. Například hezký a pěkný.",
+      `<p>Mají <b>stejný nebo podobný význam</b>.</p>
+       <p>${SYN.slice(0, 1).concat(SYN.slice(6, 7), SYN.slice(13, 14)).map(([a, b]) => czSay(`${a} = ${b}`, `${a}, ${b}`)).join(" ")}</p>`)}
+    ${sec("↔️ Slova protikladná (antonyma)", "Slova protikladná, antonyma, mají opačný význam. Například velký a malý.",
+      `<p>Mají <b>opačný význam</b>.</p>
+       <p>${[ANT[0], ANT[10], ANT[16], ANT[21]].map(([a, b]) => czSay(`${a} × ${b}`, `${a}, ${b}`)).join(" ")}</p>`)}
+    ${sec("🔀 Slova mnohoznačná", "Slova mnohoznačná mají více významů. Který význam slovo má, poznáme až ve větě. Například koruna: královská koruna, koruna stromu a koruna jako peníze.",
+      `<p>Mají <b>více významů</b>. Který to je, poznáme až ve větě.</p>
+       ${MULTI.slice(0, 3).map(x => `<p>${czSay(`<b>${x.w}</b>`, x.w)}: ${x.m.map(m => czSay(m, `${x.w}: ${czClean(m)}`)).join(" ")}</p>`).join("")}`)}`;
+  czBind();
+}
+
+function nadSort() {
+  const groups = shuffle(NAD).slice(0, 3);
+  const items = shuffle(groups.flatMap((g, k) => shuffle(g.p).slice(0, 4).map(w => ({ t: w, k }))));
+  cvicSort({ title: "🗂️ Ke kterému nadřazenému slovu patří?", cols: groups.map((g, k) => ({ k, t: g.n })), items, again: nadSort });
+}
+
+function nadQuiz() {
+  const items = shuffle(NAD).slice(0, 8).map(g => {
+    if (Math.random() < .5) {
+      const ws = shuffle(g.p).slice(0, 3).join(", ");
+      return { q: `Jaké slovo je nadřazené ke slovům:<span class="w1">${ws}</span>`, say: `Jaké slovo je nadřazené ke slovům: ${ws}?`,
+        opts: opt4(g.n, NAD.map(x => x.n)), a: g.n, why: `${g.n} → ${ws}`, after: g.n };
+    }
+    const w = pick(g.p);
+    return { q: `Které slovo je podřazené ke slovu<span class="w1">${g.n}</span>`, say: `Které slovo je podřazené ke slovu ${g.n}?`,
+      opts: opt4(w, NAD.filter(x => x !== g).map(x => pick(x.p))), a: w, why: `${g.n} → ${w}`, after: w };
+  });
+  cvicChoice({ title: "⬆️ Nadřazená a podřazená slova", items, again: nadQuiz });
+}
+
+function odd() {
+  const items = shuffle(NAD).slice(0, 8).map(g => {
+    const other = pick(NAD.filter(x => x !== g)), w = pick(other.p), ws = shuffle(g.p).slice(0, 3);
+    return { q: "Které slovo mezi ostatní nepatří?", opts: shuffle([...ws, w]), a: w,
+      why: `${ws.join(", ")} jsou slova souřadná (nadřazené slovo: ${g.n}). Slovo ${w} sem nepatří (${other.n}).` };
+  });
+  cvicChoice({ title: "🧺 Co nepatří mezi slova souřadná?", items, again: odd });
+}
+
+function pairQuiz(list, kind, again) {
+  const items = shuffle(list).slice(0, 10).map(([a, b, k]) => {
+    const [w, r] = Math.random() < .5 ? [a, b] : [b, a];
+    const pool = list.filter(x => x[2] === k && x[0] !== a).flatMap(x => [x[0], x[1]]).filter(x => x !== w && x !== r);
+    return { q: `${kind.q}<span class="w1">${w}</span>`, say: `${kind.say} ${w}?`, opts: opt4(r, pool), a: r,
+      why: `${w} ${kind.sign} ${r}`, after: `${w}, ${r}` };
+  });
+  cvicChoice({ title: kind.title, items, again });
+}
+const syn = () => pairQuiz(SYN, { title: "🤝 Najdi slovo souznačné", q: "Které slovo má stejný nebo podobný význam jako", say: "Které slovo má stejný nebo podobný význam jako slovo", sign: "=" }, syn);
+const ant = () => pairQuiz(ANT, { title: "↔️ Najdi slovo protikladné", q: "Které slovo má opačný význam než", say: "Které slovo má opačný význam než slovo", sign: "×" }, ant);
+
+function multi() {
+  const items = shuffle(MULTI).slice(0, 8).map(x => {
+    if (Math.random() < .3) return { q: "Které slovo je mnohoznačné?", opts: shuffle([x.w, ...shuffle(SINGLE).slice(0, 3)]), a: x.w,
+      why: `${x.w}: ${x.m.map(czClean).join(", ")}` };
+    return { q: `Které slovo má všechny tyto významy?<div class="mean">${x.m.map(m => `<div>${m}</div>`).join("")}</div>`,
+      say: `Které slovo má všechny tyto významy? ${x.m.map(czClean).join(". ")}.`, rate: 0.85,
+      opts: opt4(x.w, MULTI.map(y => y.w)), a: x.w, after: x.w };
+  });
+  cvicChoice({ title: "🔀 Slova mnohoznačná", items, again: multi });
+}
+
+function rel() {
+  const make = (pair, t) => ({ q: `<span class="w1">${pair}</span>`, say: pair.replace(/ [–=×] /, ", "), opts: Object.values(TYPES), a: TYPES[t] });
+  const pool = [
+    ...shuffle(SYN).slice(0, 3).map(([a, b]) => make(`${a} – ${b}`, "syn")),
+    ...shuffle(ANT).slice(0, 3).map(([a, b]) => make(`${a} – ${b}`, "ant")),
+    ...shuffle(NAD).slice(0, 2).map(g => make(Math.random() < .5 ? `${g.n} – ${pick(g.p)}` : `${pick(g.p)} – ${g.n}`, "nad")),
+    ...shuffle(NAD).slice(0, 2).map(g => { const [a, b] = shuffle(g.p); return { ...make(`${a} – ${b}`, "sour"), why: `společné nadřazené slovo: ${g.n}` }; }),
+  ];
+  cvicChoice({ title: "❓ Jaká jsou to slova?", ask: "Jaký je vztah mezi slovy?", items: shuffle(pool), again: rel });
+}
+
+skolaStart({ scoreKey: "cjVyznamSlovScore", english: false, demo: "Hezký a pěkný jsou slova souznačná.", modes: { learn, nadSort, nadQuiz, odd, syn, ant, multi, rel } });
+</script>
+</body>
+</html>

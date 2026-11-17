@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%AF%3C/text%3E%3C/svg%3E">
+<title>Zaokrouhlování 🎯</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .task { font-size: 1.6rem; }
+  .nl { position: relative; height: 78px; margin: 10px 24px 6px; font-weight: normal; }
+  .nl .axis { position: absolute; top: 36px; left: 0; right: 0; height: 4px; background: #5b4bb7; }
+  .nl .tick { position: absolute; top: 30px; width: 2px; height: 16px; background: #5b4bb7; transform: translateX(-1px); }
+  .nl .tick.big { top: 24px; height: 28px; width: 3px; }
+  .nl .tick.mid { top: 22px; height: 32px; width: 3px; background: #d35400; }
+  .nl .lab { position: absolute; top: 54px; transform: translateX(-50%); font-size: 1.05rem; color: #333; }
+  .nl .lab.mid { color: #d35400; }
+  .nl .mark { position: absolute; top: 0; transform: translateX(-50%); color: #c0392b; font-weight: bold; font-size: 1.1rem; white-space: nowrap; text-align: center; line-height: 1.1; }
+  .rule { text-align: center; font-size: 1.2rem; }
+  .rule b { color: #5b4bb7; }
+  .ex { font-size: 1.3rem; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🎯 Zaokrouhlování</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="tens">🔟 Na desítky</button>
+  <button data-mode="hundreds">💯 Na stovky</button>
+  <button data-mode="write">✏️ Napiš</button>
+  <button data-mode="big">🚀 Větší čísla</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const ORD = { 10: { na: "na desítky", dig: "jednotek" }, 100: { na: "na stovky", dig: "desítek" } };
+const round = (n, s) => Math.round(n / s) * s;
+const digit = (n, s) => Math.floor(n / (s / 10)) % 10;
+/* číslo, které není násobkem s; asi ve čtvrtině případů rozhoduje pětka */
+function num(s, max) {
+  const lo = rnd(1, Math.floor((max - 1) / s)) * s;
+  return Math.random() < .25 ? lo + s / 2 + (s === 100 ? rnd(0, 9) : 0) : lo + rnd(1, s - 1);
+}
+function line(n, s) {
+  const lo = Math.floor(n / s) * s, hi = lo + s, pos = v => (v - lo) / s * 100;
+  const ticks = Array.from({ length: 11 }, (_, k) => lo + k * s / 10)
+    .map((v, k) => `<span class="tick ${k === 5 ? "mid" : k % 10 === 0 ? "big" : ""}" style="left:${pos(v)}%"></span>`).join("");
+  return `<div class="nl"><div class="axis"></div>${ticks}
+    <span class="lab" style="left:0">${lo}</span><span class="lab mid" style="left:50%">${lo + s / 2}</span><span class="lab" style="left:100%">${hi}</span>
+    <span class="mark" style="left:${pos(n)}%">${n}<br>▼</span></div>`;
+}
+const ruleTxt = (n, s) => { const d = digit(n, s); return `Rozhoduje číslice na místě ${ORD[s].dig}: ${d} → ${d >= 5 ? "nahoru ⬆️" : "dolů ⬇️"}`; };
+
+function learn() {
+  const ex = [[347, 10], [345, 10], [342, 10], [462, 100], [450, 100], [438, 100]];
+  app.innerHTML = `<h2 class="clk" data-say="Zaokrouhlování">📖 Zaokrouhlování <span class="ico">🔊</span></h2>
+    <div class="box clk rule" data-say="Číslice 0, 1, 2, 3, 4: zaokrouhlím dolů. Číslice 5, 6, 7, 8, 9: zaokrouhlím nahoru.">
+      <b>0 1 2 3 4</b> → dolů ⬇️ &nbsp; | &nbsp; <b>5 6 7 8 9</b> → nahoru ⬆️ <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Na desítky: rozhoduje číslice na místě jednotek. Na stovky: rozhoduje číslice na místě desítek. Znak přibližně se rovná píšu jako dvě vlnovky.">
+      🔟 <b>Na desítky</b> – rozhoduje číslice na místě <b>jednotek</b>.<br>
+      💯 <b>Na stovky</b> – rozhoduje číslice na místě <b>desítek</b>.<br>
+      ≈ znamená „přibližně se rovná“. <span class="ico">🔊</span></div>
+    ${ex.map(([n, s]) => { const r = round(n, s); return `<div class="box clk" data-say="${n} zaokrouhleno ${ORD[s].na} je ${r}. ${czClean(ruleTxt(n, s))}.">
+      <div class="ex"><b>${n} ≈ ${r}</b> (${ORD[s].na}) <span class="ico">🔊</span></div>${line(n, s)}<div class="note center">${ruleTxt(n, s)}</div></div>`; }).join("")}`;
+  czBind();
+}
+
+function choice(s, max, title, again) {
+  const items = Array.from({ length: 10 }, () => num(s, max)).map(n => {
+    const lo = Math.floor(n / s) * s, r = round(n, s);
+    return { q: `Zaokrouhli <b>${n}</b> ${ORD[s].na}${line(n, s)}`, say: `Zaokrouhli ${n} ${ORD[s].na}.`,
+      opts: [String(lo), String(lo + s)], a: String(r), why: ruleTxt(n, s), after: `${n} zaokrouhleno ${ORD[s].na} je ${r}.` };
+  });
+  cvicChoice({ title, items, again });
+}
+const tens = () => choice(10, 1000, "🔟 Zaokrouhli na desítky", tens);
+const hundreds = () => choice(100, 1000, "💯 Zaokrouhli na stovky", hundreds);
+
+function writeRound(max, title, again) {
+  const items = Array.from({ length: 10 }, () => { const s = Math.random() < .5 ? 10 : 100; return { n: num(s, max), s }; });
+  cvicAsk({
+    title, items, again, numeric: true, placeholder: "zaokrouhlené číslo",
+    prompt: x => `${x.n} ≈ <span class="gap">?</span><div class="note">${ORD[x.s].na}</div>`,
+    say: x => speakCz(`Zaokrouhli ${x.n} ${ORD[x.s].na}.`),
+    answer: x => round(x.n, x.s),
+    check: (x, v) => +v.replace(/\s/g, "") === round(x.n, x.s),
+    help: x => `${line(x.n, x.s)}<div class="note center">Rozhoduje číslice na místě ${ORD[x.s].dig}.</div>`,
+    solution: x => `${x.n} ≈ ${round(x.n, x.s)}`,
+    after: x => speakCz(`${x.n} zaokrouhleno ${ORD[x.s].na} je ${round(x.n, x.s)}.`),
+  });
+}
+const write = () => writeRound(1000, "✏️ Zaokrouhli a napiš", write);
+const big = () => writeRound(10000, "🚀 Větší čísla", big);
+
+skolaStart({ scoreKey: "mZaokrouhlovaniScore", english: false, demo: "347 zaokrouhleno na desítky je 350.", modes: { learn, tens, hundreds, write, big } });
+</script>
+</body>
+</html>

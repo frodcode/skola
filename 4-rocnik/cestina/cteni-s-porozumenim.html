@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Čtení s porozuměním 📚</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .story { background: #fff; border: 2px solid #ddd6ff; border-radius: 14px; padding: 12px 16px; font-size: 1.3rem; line-height: 1.7; }
+  .story .s { cursor: pointer; border-radius: 6px; }
+  .story .s:hover, .story .s.on { background: #ddd6ff; }
+  .story .ico { font-size: .7em; opacity: .5; }
+  .texts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .texts button { font-size: 1.15rem; padding: 14px; border-radius: 14px; border: 2px solid #5b4bb7; background: #fff; cursor: pointer; }
+  .texts button b { display: block; font-size: 2rem; }
+  .q { font-size: 1.4rem; font-weight: bold; color: #3a2d99; text-align: center; margin: 14px 0 10px; }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; color: #5b4bb7; font-weight: bold; }
+  details .story { font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>📚 Čtení s porozuměním</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Jak na to</button>
+  <button data-mode="choose">📚 Vyber text</button>
+  <button data-mode="random">🎲 Náhodný text</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* věta "text|výslovnost" – za | je text pro hlas; otázky: první možnost je správná */
+const TEXTS = [
+  { e: "🔑", t: "Ztracený klíč", s: [
+    "Tomáš se vrátil ze školy a chtěl odemknout dveře.",
+    "Klíč ale v batohu nebyl.",
+    "Prohledal všechny kapsy, ale klíč nenašel.",
+    "Smutně si sedl na schody před domem.",
+    "Vtom šla kolem sousedka paní Nováková se psem Benem.",
+    "Ben začal čenichat v trávě u branky a najednou zaštěkal.",
+    "V trávě ležel Tomášův klíč!",
+    "Tomáš sousedce poděkoval a Benovi dal kousek rohlíku ze svačiny.",
+  ], q: [
+    ["Proč si Tomáš sedl na schody?", "Nemohl najít klíč.", "Byl unavený.", "Čekal na kamaráda.", "Bolela ho noha."],
+    ["Kdo klíč našel?", "pes Ben", "paní Nováková", "Tomáš", "maminka"],
+    ["Kde klíč ležel?", "v trávě u branky", "v batohu", "na schodech", "v kapse"],
+    ["Co dostal Ben za odměnu?", "kousek rohlíku", "piškot", "kost", "nic"],
+    ["Jak se Tomáš cítil, když klíč nemohl najít?", "smutně", "vesele", "ospale", "hladově"],
+  ] },
+  { e: "🦔", t: "Ježek", s: [
+    "Ježek je malý savec, který má na zádech ostré bodliny.",
+    "Když se lekne, stočí se do klubíčka.",
+    "Přes den většinou spí a potravu hledá v noci.",
+    "Žere hlavně brouky, žížaly a slimáky, proto je na zahradě užitečný.",
+    "Na zimu si najde úkryt v hromadě listí a spí zimním spánkem až do jara.",
+    "Pozor, ježkovi nikdy nedávejte mléko, protože mu škodí.",
+    "Můžete mu ale nechat misku s vodou.",
+  ], q: [
+    ["Co udělá ježek, když se lekne?", "Stočí se do klubíčka.", "Uteče do lesa.", "Vyleze na strom.", "Začne kousat."],
+    ["Kdy ježek hledá potravu?", "v noci", "ráno", "v poledne", "jen v zimě"],
+    ["Proč je ježek na zahradě užitečný?", "Žere brouky a slimáky.", "Nosí jablka na bodlinách.", "Hlídá dům.", "Kope záhony."],
+    ["Co dělá ježek v zimě?", "Spí zimním spánkem.", "Odletí do teplých krajin.", "Staví si hnízdo na stromě.", "Loví žížaly."],
+    ["Co ježkovi nesmíme dávat?", "mléko", "vodu", "brouky", "žížaly"],
+  ] },
+  { e: "🏰", t: "Výlet na hrad", s: [
+    "Ve čtvrtek jela třída 4. B na výlet na hrad Karlštejn.|Ve čtvrtek jela třída čtvrtá bé na výlet na hrad Karlštejn.",
+    "Ráno se všichni sešli na nádraží a jeli vlakem.",
+    "Z nádraží šli pěšky do kopce.",
+    "Na hradě je provázela paní průvodkyně.",
+    "Vyprávěla jim o císaři Karlu IV., který hrad dal postavit.|Vyprávěla jim o císaři Karlu Čtvrtém, který hrad dal postavit.",
+    "Nejvíc se dětem líbila kaple, která má stěny zdobené zlatem a vzácnými kameny.",
+    "Cestou zpátky začalo pršet, ale nikomu to nevadilo, protože všichni měli pláštěnky.",
+  ], q: [
+    ["Kdy jela třída na výlet?", "ve čtvrtek", "v pondělí", "v pátek", "v sobotu"],
+    ["Čím jely děti na výlet?", "vlakem", "autobusem", "autem", "na kole"],
+    ["Kdo dal hrad Karlštejn postavit?", "císař Karel IV.", "paní průvodkyně", "paní učitelka", "král Jiří z Poděbrad"],
+    ["Co se dětem na hradě líbilo nejvíc?", "kaple", "věž", "nádvoří", "obchod se suvenýry"],
+    ["Proč dětem nevadil déšť?", "Všichni měli pláštěnky.", "Schovaly se ve vlaku.", "Pršelo jen chvíli.", "Měly deštníky."],
+  ] },
+  { e: "🎂", t: "Dort pro tatínka", s: [
+    "Anička chtěla tatínkovi k narozeninám upéct dort.",
+    "Požádala o pomoc babičku.",
+    "Nejdřív si umyly ruce a připravily mouku, cukr, vajíčka a máslo.",
+    "Babička vyšlehala vajíčka s cukrem a Anička opatrně přisypala mouku.",
+    "Dort se pekl v troubě čtyřicet minut.",
+    "Když vychladl, Anička ho ozdobila jahodami a šlehačkou.",
+    "Tatínek měl takovou radost, že si přidal dva kousky.",
+  ], q: [
+    ["Pro koho Anička pekla dort?", "pro tatínka", "pro babičku", "pro maminku", "pro sebe"],
+    ["Co udělaly Anička s babičkou jako první?", "Umyly si ruce.", "Zapnuly troubu.", "Vyšlehaly vajíčka.", "Ozdobily dort."],
+    ["Jak dlouho se dort pekl?", "40 minut", "4 minuty", "10 minut", "2 hodiny"],
+    ["Čím Anička dort ozdobila?", "jahodami a šlehačkou", "čokoládou", "svíčkami", "borůvkami"],
+    ["Jak poznáme, že dort tatínkovi chutnal?", "Přidal si dva kousky.", "Snědl celý dort.", "Nechal ho na talíři.", "Upekl další dort."],
+  ] },
+  { e: "🐝", t: "Včely", s: [
+    "Včely žijí ve velkých rodinách, kterým se říká včelstva.",
+    "V každém včelstvu je jedna královna, která klade vajíčka.",
+    "Většinu práce dělají dělnice.",
+    "Létají na květy, sbírají nektar a pyl a starají se o mladé včely.",
+    "Z nektaru vyrábějí včely med.",
+    "Když včela létá z květu na květ, přenáší pyl, a díky tomu na stromech dozrají třeba jablka nebo třešně.",
+    "Včelám pomáháme, když na zahradě necháme kvést květiny a nepoužíváme jedy na hmyz.",
+  ], q: [
+    ["Jak se říká včelí rodině?", "včelstvo", "úl", "hejno", "stádo"],
+    ["Kolik královen je ve včelstvu?", "jedna", "dvě", "deset", "žádná"],
+    ["Kdo ve včelstvu dělá většinu práce?", "dělnice", "královna", "včelař", "mladé včely"],
+    ["Z čeho vyrábějí včely med?", "z nektaru", "z pylu", "z vody", "z listí"],
+    ["Proč jsou včely důležité pro ovocné stromy?", "Přenášejí pyl z květu na květ.", "Hlídají stromy.", "Zalévají stromy.", "Jedí listí."],
+  ] },
+  { e: "🚲", t: "Závod na kolech", s: [
+    "V sobotu se v parku konal závod na kolech.",
+    "Na startu stálo dvanáct dětí, mezi nimi i Jirka a jeho kamarád Petr.",
+    "Po startovním výstřelu se všichni rozjeli.",
+    "V zatáčce Petr najel na kámen a spadl.",
+    "Jirka zastavil, pomohl mu vstát a zeptal se, jestli ho něco nebolí.",
+    "Pak spolu dojeli do cíle jako poslední.",
+    "Pan pořadatel jim přesto dal zvláštní medaili za kamarádství.",
+  ], q: [
+    ["Kde se závod konal?", "v parku", "ve škole", "v lese", "na silnici"],
+    ["Kolik dětí stálo na startu?", "12", "2", "10", "20"],
+    ["Co se stalo Petrovi?", "Spadl z kola.", "Píchl kolo.", "Zabloudil.", "Vyhrál."],
+    ["Proč Jirka dojel do cíle jako poslední?", "Zastavil, aby pomohl Petrovi.", "Byl pomalý.", "Také spadl.", "Ztratil se."],
+    ["Za co dostali chlapci medaili?", "za kamarádství", "za vítězství", "za rychlost", "za hezké kolo"],
+  ] },
+];
+const sent = s => { const [t, say] = s.split("|"); return { t, say: say || t }; };
+const storyHtml = x => `<div class="story">${x.s.map(sent).map(s => `<span class="s" data-say="${s.say}">${s.t} <span class="ico">🔊</span></span>`).join(" ")}</div>`;
+function bindStory(root) {
+  root.querySelectorAll(".story .s").forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    root.querySelectorAll(".story .s.on").forEach(y => y.classList.remove("on"));
+    el.classList.add("on");
+    speakCz(el.dataset.say, 0.8);
+  });
+}
+
+function learn() {
+  const tips = [
+    ["📖", "Přečti si celý text pozorně, klidně dvakrát."],
+    ["🔊", "Když si nevíš rady, klikni na větu a poslechni si ji."],
+    ["❓", "Přečti si otázku a všechny odpovědi."],
+    ["🔍", "Najdi v textu větu, kde je odpověď."],
+    ["🤔", "Některé odpovědi v textu přímo nejsou – musíš přemýšlet, proč se něco stalo."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Jak číst s porozuměním">📖 Jak číst s porozuměním <span class="ico">🔊</span></h2>
+    ${tips.map(([e, t]) => `<div class="box clk" data-say="${t}">${e} ${t} <span class="ico">🔊</span></div>`).join("")}
+    <div class="center"><button class="btn" id="go">📚 Vybrat text</button></div>`;
+  czBind();
+  app.querySelector("#go").onclick = choose;
+}
+
+function choose() {
+  app.innerHTML = `<h2 class="clk" data-say="Vyber si text">📚 Vyber si text <span class="ico">🔊</span></h2>
+    <div class="texts">${TEXTS.map((x, k) => `<button data-k="${k}"><b>${x.e}</b>${x.t}</button>`).join("")}</div>`;
+  czBind();
+  app.querySelectorAll(".texts button").forEach(b => b.onclick = () => read(TEXTS[b.dataset.k]));
+}
+const random = () => read(pick(TEXTS));
+
+function read(x) {
+  app.innerHTML = `<h2 class="clk" data-say="${x.t}">${x.e} ${x.t} <span class="ico">🔊</span></h2>
+    <p class="center note">Přečti si text. Na větu můžeš kliknout a poslechnout si ji.</p>
+    ${storyHtml(x)}
+    <div class="center"><button class="btn" id="go">❓ Otázky ➡️</button></div>`;
+  czBind();
+  bindStory(app);
+  speakCz(x.t);
+  app.querySelector("#go").onclick = () => questions(x);
+}
+
+function questions(x) {
+  const items = x.q.map(([q, a, ...bad]) => ({ q, a, opts: shuffle([a, ...bad]) }));
+  cvicRound(items, () => read(x), (it, i, n, done) => {
+    app.innerHTML = `${cvicHead(`${x.e} ${x.t}`, i, n)}
+      <details><summary>📄 Ukázat text</summary>${storyHtml(x)}</details>
+      <div class="q clk" id="q">${it.q} <span class="ico">🔊</span></div>
+      <div class="options">${it.opts.map(t => `<button data-t="${t}">${t}</button>`).join("")}</div>
+      <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    bindStory(app);
+    const say = () => speakCz(it.q, 0.85);
+    say();
+    app.querySelector("#q").onclick = say;
+    app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+      app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.t === it.a) y.classList.add("ok"); });
+      const fb = app.querySelector("#fb");
+      if (b.dataset.t === it.a) {
+        addScore(2);
+        fb.innerHTML = `<span class="good">Výborně! ⭐</span>`;
+        setTimeout(() => done(true), 1300);
+      } else {
+        b.classList.add("bad");
+        fb.innerHTML = `<span class="badc">Správně je: ${it.a}<span class="note">Najdi to v textu 📄</span></span>`;
+        app.querySelector("details").open = true;
+        const nx = app.querySelector("#nx"); nx.innerHTML = `<button class="btn">Další ➡️</button>`; nx.firstChild.onclick = () => done(false);
+      }
+    });
+  });
+}
+
+skolaStart({ scoreKey: "cjCteniScore", english: false, demo: "Ježek je malý savec, který má na zádech ostré bodliny.", modes: { learn, choose, random } });
+</script>
+</body>
+</html>
