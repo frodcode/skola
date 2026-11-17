@@ -3,11 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
 <title>Věci denní potřeby – Everyday things 🎒</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: linear-gradient(135deg,#8ec5fc,#e0c3fc); min-height: 100vh; color: #222; }
-  header { text-align: center; padding: 18px 10px 6px; }
+  header { text-align: center; padding: 18px 10px 6px; position: relative; }
+  .home { display: inline-block; margin-bottom: 6px; color: #fff; text-decoration: none; font-size: .95rem; opacity: .85; }
+  .home:hover { opacity: 1; text-decoration: underline; }
   h1 { margin: 0; font-size: 2rem; color: #fff; text-shadow: 2px 2px 0 #5b4bb7; }
   .score { margin-top: 6px; font-size: 1.2rem; color: #fff; font-weight: bold; }
   nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 12px; }
@@ -72,6 +76,7 @@
 </head>
 <body>
 <header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
   <h1>🎒 Everyday things – Věci denní potřeby</h1>
   <div class="score">⭐ Body: <span id="score">0</span></div>
   <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
