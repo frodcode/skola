@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%94%97%3C/text%3E%3C/svg%3E">
+<title>Skladební dvojice 🔗</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .sentence { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 6px; font-size: 1.7rem; margin: 18px 0 10px; }
+  .w { padding: 2px 8px 6px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+  .w:hover { border-color: #5b4bb7; }
+  .w.p { cursor: default; padding: 2px 0 6px; margin-left: -10px; } .w.p:hover { border-color: transparent; }
+  .w.wrong { background: #ffc9c9; animation: shake .3s; }
+  .pod { text-decoration: underline solid #2d7a2a 3px; text-underline-offset: 6px; color: #2d7a2a; font-weight: bold; }
+  .pri { text-decoration: underline wavy #c0392b 2px; text-underline-offset: 6px; color: #c0392b; font-weight: bold; }
+  .zsd { text-align: center; font-size: 1.4rem; margin: 8px 0; }
+  .ex { font-size: 1.3rem; text-align: center; margin: 8px 0; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🔗 Skladební dvojice</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="find">🔍 Najdi podmět a přísudek</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* P = podmět, Q = přísudek; k = "kdo" / "co" (otázka na podmět) */
+const SENTENCES = [
+  "Malý pes/P štěká/Q na kočku .|kdo",
+  "Na zahradě rostou/Q krásné květiny/P .|co",
+  "Babička/P peče/Q jablečný koláč .|kdo",
+  "Ráno svítilo/Q jasné slunce/P .|co",
+  "Děti/P běhají/Q po hřišti .|kdo",
+  "Ve škole zazvonil/Q zvonek/P .|co",
+  "Můj bratr/P čte/Q zajímavou knihu .|kdo",
+  "Po obloze letí/Q ptáci/P .|kdo",
+  "Tatínek/P opravuje/Q kolo .|kdo",
+  "V lese žije/Q liška/P .|kdo",
+  "Učitelka/P vysvětlila/Q novou látku .|kdo",
+  "Vítr/P fouká/Q od severu .|co",
+  "Ze stromu padá/Q listí/P .|co",
+  "Filip/P napsal/Q diktát bez chyby .|kdo",
+  "Do třídy přišel/Q nový žák/P .|kdo",
+  "Řeka/P teče/Q do údolí .|co",
+  "Moje sestra/P zpívá/Q ve sboru .|kdo",
+  "Na poli pracuje/Q traktor/P .|co",
+  "Kočka/P chytila/Q myš .|kdo",
+  "Večer přiletěla/Q sova/P .|kdo",
+].map(line => {
+  const [s, k] = line.split("|");
+  const words = s.split(" ").map(t => { const [w, r] = t.split("/"); return { w, r: r || "" }; });
+  return { words, k, P: words.find(x => x.r === "P").w, Q: words.find(x => x.r === "Q").w, text: s.replace(/\/[PQ]/g, "").replace(/ ([.,!])/g, "$1") };
+});
+
+function learn() {
+  app.innerHTML = `<h2 class="clk" data-say="Základní skladební dvojice">📖 Základní skladební dvojice <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Základní skladební dvojici tvoří podmět a přísudek.">🔗 Základní skladební dvojici (ZSD) tvoří <b>podmět</b> a <b>přísudek</b>. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Přísudek hledáme jako první. Je to sloveso. Ptáme se: Co dělá? Co se děje? Podtrhujeme ho vlnovkou.">
+      1️⃣ <span class="pri">Přísudek</span> hledáme <b>jako první</b>. Je to <b>sloveso</b>. Ptáme se: <b>Co dělá? Co se děje?</b><br>Podtrháváme ho <b>vlnovkou</b>. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Podmět najdeme otázkou: kdo nebo co a přísudek. Je to většinou podstatné jméno v prvním pádě. Podtrhujeme ho rovnou čarou.">
+      2️⃣ <span class="pod">Podmět</span> najdeme otázkou <b>Kdo? / Co?</b> + přísudek. Bývá to podstatné jméno (nebo zájmeno) v <b>1. pádě</b>.<br>Podtrháváme ho <b>rovnou čarou</b>. <span class="ico">🔊</span></div>
+    <h3 class="hs" data-say="Příklady">🔍 Příklady <span class="ico">🔊</span></h3>
+    ${[0, 1, 3].map(i => { const s = SENTENCES[i]; return `<div class="ex clk" data-say="${s.text} Přísudek je ${s.Q}. ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}? ${s.P}. Podmět je ${s.P}.">
+      ${render(s, true)} <span class="ico">🔊</span><div class="note">Co se děje? <b>${s.Q}</b> → ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}? <b>${s.P}</b> → ZSD: ${s.P} – ${s.Q}</div></div>`; }).join("")}
+    <div class="box clk" data-say="Pozor: podmět nemusí stát na začátku věty. Někdy je až za přísudkem.">⚠️ Podmět <b>nemusí</b> stát na začátku věty – někdy je až za přísudkem (Ve škole zazvonil <span class="pod">zvonek</span>). <span class="ico">🔊</span></div>`;
+  czBind();
+}
+
+function render(s, solved, done = {}) {
+  return s.words.map((t, i) => /^[.,!]$/.test(t.w)
+    ? `<span class="w p">${t.w}</span>`
+    : `<span class="w ${(solved || done[t.r]) && t.r === "P" ? "pod" : ""} ${(solved || done[t.r]) && t.r === "Q" ? "pri" : ""}" data-i="${i}">${t.w}</span>`).join(" ").replace(/ (<span class="w p">)/g, "$1");
+}
+
+function find() {
+  const set = shuffle(SENTENCES).slice(0, 8);
+  let k = 0, correct = 0;
+  const total = set.length * 2;
+  function show(step, done) {
+    if (k >= set.length) return finish(correct, total, find);
+    const s = set[k];
+    let tries = 0;
+    const task = step === "Q" ? "Najdi přísudek. Co se děje? Klikni na sloveso." : `Najdi podmět. ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}?`;
+    app.innerHTML = `${cvicHead("🔍 Najdi podmět a přísudek", k * 2 + (step === "P" ? 1 : 0), total)}
+      <p class="center clk" id="task"><b>${step === "Q" ? "1️⃣ " + "Najdi <span class='pri'>přísudek</span> – co se děje?" : `2️⃣ Najdi <span class='pod'>podmět</span> – ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}?`}</b> <span class="ico">🔊</span></p>
+      <div class="sentence">${render(s, false, done)}</div>
+      <div class="center"><button class="btn light" id="read">🔊 Přečti větu</button> <button class="btn light" id="hint">💡 Nápověda</button></div>
+      <div class="feedback" id="fb"></div>`;
+    const fb = app.querySelector("#fb");
+    app.querySelector("#task").onclick = () => speakCz(task);
+    app.querySelector("#read").onclick = () => speakCz(s.text, 0.8);
+    app.querySelector("#hint").onclick = () => {
+      tries = Math.max(tries, 1);
+      fb.innerHTML = `<span class="note">${step === "Q" ? "Přísudek je sloveso – slovo, které říká, co se děje nebo co někdo dělá." : `Zeptej se: ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}? Odpověď je v 1. pádě.`}</span>`;
+    };
+    speakCz(task);
+    app.querySelectorAll(".sentence .w[data-i]").forEach(el => el.onclick = () => {
+      const t = s.words[el.dataset.i];
+      speakCz(t.w);
+      if (t.r === step) {
+        const pts = tries ? 1 : 2;
+        if (!tries) correct++;
+        addScore(pts);
+        done = { ...done, [step]: true };
+        el.classList.add(step === "P" ? "pod" : "pri");
+        if (step === "Q") {
+          fb.innerHTML = `<span class="good">Ano! Přísudek je „${s.Q}“. 👍</span>`;
+          setTimeout(() => show("P", done), 1300);
+        } else {
+          fb.innerHTML = `<span class="good">Výborně! ⭐ ZSD: <span class="pod">${s.P}</span> – <span class="pri">${s.Q}</span></span>`;
+          setTimeout(() => speakCz(`Základní skladební dvojice: ${s.P}, ${s.Q}`), 600);
+          setTimeout(() => { k++; show("Q", {}); }, 2600);
+        }
+        return;
+      }
+      tries++;
+      el.classList.add("wrong");
+      setTimeout(() => el.classList.remove("wrong"), 400);
+      const tip = step === "Q" ? "Hledej sloveso – co se děje?" : `Zeptej se: ${s.k === "kdo" ? "Kdo" : "Co"} ${s.Q}?`;
+      if (tries >= 3) {
+        const right = app.querySelector(`.sentence .w[data-i="${s.words.findIndex(x => x.r === step)}"]`);
+        right.classList.add(step === "P" ? "pod" : "pri");
+        done = { ...done, [step]: true };
+        fb.innerHTML = `<span class="badc">${step === "Q" ? "Přísudek" : "Podmět"} je „${step === "Q" ? s.Q : s.P}“.</span>`;
+        app.querySelectorAll(".sentence .w").forEach(x => x.onclick = null);
+        setTimeout(() => step === "Q" ? show("P", done) : (k++, show("Q", {})), 2200);
+      } else fb.innerHTML = `<span class="badc">To není ${step === "Q" ? "přísudek" : "podmět"}. ${tip} (pokus ${tries}/3)</span>`;
+    });
+  }
+  show("Q", {});
+}
+
+skolaStart({ scoreKey: "cjSkladebniDvojiceScore", english: false, modes: { learn, find } });
+</script>
+</body>
+</html>

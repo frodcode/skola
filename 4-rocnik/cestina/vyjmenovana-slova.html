@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<title>Vyjmenovaná slova 📜</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+  .row .sp { font-size: 1.1rem; }
+  .rel { color: #555; font-size: .95rem; margin: 2px 0 10px; }
+  .rel .sp { font-size: .95rem; }
+  .letter { display: inline-block; width: 44px; text-align: center; background: #5b4bb7; color: #fff; border-radius: 10px; margin-right: 6px; }
+  .lg { color: #c0392b; border-bottom: 3px solid #5b4bb7; padding: 0 4px; }
+  .pairs td { padding: 6px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>📜 Vyjmenovaná slova</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="fill">🧩 Doplň i / y</button>
+  <button data-mode="dict">✏️ Diktát</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const ROWS = [
+  { l: "B", words: ["být", "bydlit", "obyvatel", "byt", "příbytek", "nábytek", "dobytek", "obyčej", "bystrý", "bylina", "kobyla", "býk", "Přibyslav"],
+    rel: ["bydliště", "obyvatelstvo", "obyčejný", "bylinkový", "zbytek", "býčí"] },
+  { l: "L", words: ["slyšet", "mlýn", "blýskat se", "polykat", "plynout", "plýtvat", "vzlykat", "lysý", "lýtko", "lýko", "lyže", "pelyněk", "plyš"],
+    rel: ["mlynář", "lyžař", "slyšitelný", "plyšový", "plynulý", "blýskavý"] },
+  { l: "M", words: ["my", "mýt", "myslit", "mýlit se", "hmyz", "myš", "hlemýžď", "mýtit", "zamykat", "smýkat", "dmýchat", "chmýří", "nachomýtnout se", "Litomyšl"],
+    rel: ["myšlenka", "mýdlo", "omyl", "umývadlo", "myslivec", "myší"] },
+  { l: "P", words: ["pýcha", "pytel", "pysk", "netopýr", "slepýš", "pyl", "kopyto", "klopýtat", "třpytit se", "zpytovat", "pýřit se", "pykat", "pýr", "čepýřit se"],
+    rel: ["pyšný", "pytlík", "kopytník", "třpytivý", "pylový"] },
+  { l: "S", words: ["syn", "sytý", "sýr", "syrový", "sychravý", "usychat", "sýkora", "sýček", "sysel", "syčet", "sypat"],
+    rel: ["synovec", "nasytit", "sýrový", "sýkorka", "posypat", "vysychat"] },
+  { l: "V", words: ["vy", "vysoký", "výt", "výskat", "zvykat", "žvýkat", "vydra", "výr", "vyžle", "povyk", "výheň"],
+    rel: ["výška", "zvyk", "žvýkačka", "výskot", "vysoko"], note: "Předpona vy- / vý- se píše s y: vystoupit, výlet, vyprávět." },
+  { l: "Z", words: ["brzy", "jazyk", "nazývat se", "Ruzyně"],
+    rel: ["jazykový", "jazýček", "brzký"] },
+];
+
+/* slovo s [písmenem], typ: v = vyjmenované, p = příbuzné (3. část = vyjmenované slovo), i = obyčejné slovo s i/í,
+   x = předpona vy-/vý-, h = věta s dvojicí (3. část = vysvětlení) */
+const ITEMS = `
+b[ý]t|v;b[y]dlit|v;ob[y]vatel|v;b[y]t|v;příb[y]tek|v;náb[y]tek|v;dob[y]tek|v;ob[y]čej|v;b[y]strý|v;b[y]lina|v;kob[y]la|v;b[ý]k|v
+b[y]dliště|p|bydlit;ob[y]vatelstvo|p|obyvatel;ob[y]čejný|p|obyčej;b[y]linkový|p|bylina;zb[y]tek|p|být;b[y]tový|p|byt;b[ý]čí|p|býk
+b[í]lý|i;b[i]tva|i;b[í]da|i;ob[i]lí|i
+sl[y]šet|v;ml[ý]n|v;bl[ý]skat se|v;pol[y]kat|v;pl[y]nout|v;pl[ý]tvat|v;vzl[y]kat|v;l[y]sý|v;l[ý]tko|v;l[ý]ko|v;l[y]že|v;pel[y]něk|v;pl[y]š|v
+ml[y]nář|p|mlýn;l[y]žař|p|lyže;sl[y]šitelný|p|slyšet;pl[y]šový|p|plyš;pl[y]nulý|p|plynout;bl[ý]skavý|p|blýskat se
+l[í]pa|i;l[i]ška|i;kl[i]d|i;l[i]st|i;sl[i]mák|i;l[i]monáda|i
+m[y]|v;m[ý]t|v;m[y]slit|v;m[ý]lit se|v;hm[y]z|v;m[y]š|v;hlem[ý]žď|v;zam[y]kat|v;dm[ý]chat|v;chm[ý]ří|v
+m[y]šlenka|p|myslit;m[ý]dlo|p|mýt;om[y]l|p|mýlit se;um[ý]vadlo|p|mýt;m[y]slivec|p|myslit;m[y]ší|p|myš
+m[í]č|i;m[í]sa|i;m[i]lý|i;m[i]nuta|i;m[í]sto|i
+p[ý]cha|v;p[y]tel|v;p[y]sk|v;netop[ý]r|v;slep[ý]š|v;p[y]l|v;kop[y]to|v;klop[ý]tat|v;třp[y]tit se|v;p[y]kat|v;p[ý]r|v
+p[y]šný|p|pýcha;p[y]tlík|p|pytel;kop[y]tník|p|kopyto;třp[y]tivý|p|třpytit se;p[y]lový|p|pyl
+p[í]sek|i;p[i]lný|i;p[í]smeno|i;p[i]rát|i;op[i]ce|i;p[í]seň|i;sp[í]t|i
+s[y]n|v;s[y]tý|v;s[ý]r|v;s[y]rový|v;s[y]chravý|v;us[y]chat|v;s[ý]kora|v;s[ý]ček|v;s[y]sel|v;s[y]čet|v;s[y]pat|v
+s[y]novec|p|syn;nas[y]tit|p|sytý;s[ý]rový|p|sýr;s[ý]korka|p|sýkora;pos[y]pat|p|sypat;vys[y]chat|p|usychat
+s[í]to|i;s[i]la|i;s[i]lnice|i;s[í]ť|i;s[i]rotek|i;s[í]dliště|i
+v[y]|v;v[y]soký|v;v[ý]t|v;v[ý]skat|v;zv[y]kat|v;žv[ý]kat|v;v[y]dra|v;v[ý]r|v;v[y]žle|v;pov[y]k|v;v[ý]heň|v
+v[ý]ška|p|vysoký;zv[y]k|p|zvykat;žv[ý]kačka|p|žvýkat;v[ý]skot|p|výskat;v[y]soko|p|vysoký
+v[y]stoupit|x;v[ý]let|x;v[y]právět|x;v[ý]hra|x
+v[i]dlička|i;v[í]la|i;v[í]tr|i;v[i]dět|i;kv[í]tek|i;v[i]šně|i
+brz[y]|v;jaz[y]k|v;naz[ý]vat se|v;Ruz[y]ně|v
+jaz[y]kový|p|jazyk;jaz[ý]ček|p|jazyk
+z[i]ma|i;z[í]tra|i;z[í]vat|i;kaz[i]t|i;voz[í]k|i
+Chci b[ý]t hasičem.|h|být = existovat, žít → vyjmenované slovo
+Nesmíš psa b[í]t!|h|bít = tlouct → není vyjmenované, píšeme i
+Kočka b[y]la na střeše.|h|byla – tvar slovesa být → vyjmenované slovo
+Kovář b[i]l do železa.|h|bil – tvar slovesa bít (tlouct) → i
+Před jídlem si m[y]j ruce.|h|mýt = umývat → vyjmenované slovo
+Chci m[í]t psa.|h|mít = vlastnit → není vyjmenované, píšeme i
+V lese houká v[ý]r.|h|výr = sova → vyjmenované slovo
+Ve vodě se točí v[í]r.|h|vír = víření vody → není vyjmenované, píšeme i
+Na květech je žlutý p[y]l.|h|pyl = prášek z květů → vyjmenované slovo
+Tomáš p[i]l čaj.|h|pil – od slovesa pít → i
+M[y] jsme kamarádi.|h|my = já a ostatní → vyjmenované slovo
+Podej m[i] tu knihu.|h|mi = mně → není vyjmenované, píšeme i`
+  .trim().split(/[;\n]/).map(s => {
+    const [w, t, extra] = s.split("|");
+    const m = w.match(/^(.*)\[(.)\](.*)$/);
+    return { pre: m[1], ch: m[2], post: m[3], full: m[1] + m[2] + m[3], t, extra };
+  }).filter(x => x.t);
+
+const letterOf = x => x.pre.slice(-1).toUpperCase();
+const why = x => ({
+  v: `${x.full} – vyjmenované slovo po ${letterOf(x)} → ${x.ch}`,
+  p: `${x.full} – příbuzné k vyjmenovanému slovu <b>${x.extra}</b> → ${x.ch}`,
+  i: `${x.full} – není vyjmenované ani příbuzné → ${x.ch}`,
+  x: `${x.full} – předpona vy- / vý- se píše s y`,
+  h: x.extra,
+})[x.t];
+
+function learn() {
+  app.innerHTML = `<h2 class="clk" data-say="Vyjmenovaná slova">📖 Vyjmenovaná slova <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Po obojetných souhláskách b, f, l, m, p, s, v, z píšeme ve vyjmenovaných slovech a ve slovech příbuzných y nebo ý. V ostatních slovech píšeme i nebo í.">
+      🔑 Po <b>obojetných souhláskách B F L M P S V Z</b> píšeme <b>y / ý</b> ve <b>vyjmenovaných slovech</b> a ve <b>slovech příbuzných</b>.
+      V ostatních slovech píšeme <b>i / í</b>. <span class="ico">🔊</span></div>
+    <p class="center clk" data-say="Klikni na slovo, nebo si nech přečíst celou řadu.">Klikni na slovo, nebo si nech přečíst celou řadu. <span class="ico">🔊</span></p>
+    ${ROWS.map((r, k) => `<h3><span class="letter">${r.l}</span> <button class="btn light" data-row="${k}">🔊 Přečti řadu</button></h3>
+      <div class="row">${r.words.map(w => czSay(w)).join("")}</div>
+      <div class="rel">👪 Příbuzná slova: ${r.rel.map(w => czSay(w)).join(" ")}</div>${r.note ? `<div class="rel clk" data-say="${r.note}">✏️ ${r.note} <span class="ico">🔊</span></div>` : ""}`).join("")}
+    <h3 class="hs" data-say="Pozor na dvojice">⚠️ Pozor na dvojice <span class="ico">🔊</span></h3>
+    <table class="t pairs">
+      <tr><td>${czSay("být")} = existovat</td><td>${czSay("bít")} = tlouct</td></tr>
+      <tr><td>${czSay("mýt")} = umývat</td><td>${czSay("mít")} = vlastnit</td></tr>
+      <tr><td>${czSay("výr")} = sova</td><td>${czSay("vír")} = víření vody</td></tr>
+      <tr><td>${czSay("pyl")} = prášek z květů</td><td>${czSay("pil")} = od slovesa pít</td></tr>
+      <tr><td>${czSay("my")} = já a ostatní</td><td>${czSay("mi")} = mně</td></tr>
+      <tr><td>${czSay("syrový")} = nevařený</td><td>${czSay("sýrový")} = ze sýra</td></tr>
+    </table>`;
+  czBind();
+  app.querySelectorAll("[data-row]").forEach(b => b.onclick = () => speakSeqCz(ROWS[b.dataset.row].words, 250));
+}
+
+const pickT = (types, n) => shuffle(ITEMS.filter(x => types.includes(x.t))).slice(0, n);
+
+function fill() {
+  const items = shuffle([...pickT(["v"], 4), ...pickT(["p"], 3), ...pickT(["i"], 3), ...pickT(["x"], 1), ...pickT(["h"], 3)]).map(x => {
+    const long = /[íý]/.test(x.ch);
+    return {
+      q: `${x.pre}<span class="lg">_</span>${x.post}`, say: x.t === "h" ? x.full.replace(/[.!]$/, "") : x.full,
+      opts: long ? ["í", "ý"] : ["i", "y"], a: x.ch, why: why(x), after: x.full,
+    };
+  });
+  cvicChoice({ title: "🧩 Doplň i / y", items, again: fill, silent: true, ask: "Které písmeno chybí?" });
+}
+
+function dict() {
+  const items = shuffle([...pickT(["v"], 4), ...pickT(["p"], 3), ...pickT(["i"], 2), ...pickT(["x"], 1)]).map(x => ({ w: x.full, x }));
+  const ivy = s => norm(s).replace(/[iyíý]/g, "?");
+  cvicDictation({
+    title: "✏️ Diktát", items, again: dict,
+    wrong: (it, v) => ivy(v) === ivy(it.w) ? "Pozor na i / y! Je to vyjmenované nebo příbuzné slovo?" : "Ještě ne, poslechni si slovo znovu",
+  });
+}
+
+function quiz() {
+  const labels = { v: "📜 vyjmenované slovo", p: "👪 příbuzné slovo", i: "✏️ píše se i (není vyjmenované)" };
+  const items = shuffle([...pickT(["v"], 4), ...pickT(["p"], 3), ...pickT(["i"], 3)]).map(x => ({
+    q: x.full, opts: Object.values(labels), a: labels[x.t], why: why(x),
+  }));
+  cvicChoice({ title: "❓ Jaké je to slovo?", items, again: quiz, cls: "three", ask: "Je to vyjmenované slovo, slovo příbuzné, nebo se píše i?" });
+}
+
+skolaStart({ scoreKey: "cjVyjmenovanaScore", english: false, modes: { learn, fill, dict, quiz } });
+</script>
+</body>
+</html>

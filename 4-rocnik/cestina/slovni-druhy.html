@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%B7%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>Slovní druhy 🏷️</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .num { display: inline-block; min-width: 30px; text-align: center; background: #5b4bb7; color: #fff; border-radius: 8px; font-weight: bold; }
+  table.t td { vertical-align: top; }
+  table.t .sp { margin: 2px; }
+  .sentence { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 4px; font-size: 1.6rem; margin: 18px 0 10px; }
+  .w { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 6px; border-radius: 8px; cursor: pointer; }
+  .w .n { font-size: .9rem; min-height: 1.2em; color: #2d7a2a; font-weight: bold; }
+  .w.cur { background: #ddd6ff; outline: 3px solid #5b4bb7; }
+  .w.ok .n { color: #2d7a2a; } .w.bad .n { color: #c0392b; }
+  .w.p { cursor: default; padding: 0; }
+  .druhy { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .druhy button { font-size: 1rem; padding: 10px 4px; border-radius: 10px; border: 2px solid #5b4bb7; background: #fff; cursor: pointer; }
+  .druhy button b { display: block; font-size: 1.3rem; }
+  .druhy button.ok { background: #c8f7c5; border-color: #2d7a2a; }
+  .druhy button.bad { background: #ffc9c9; border-color: #c0392b; }
+  @media (max-width: 560px) { .druhy { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🏷️ Slovní druhy</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="sortMode">🗂️ Třídění</button>
+  <button data-mode="ohebne">🔀 Ohebné / neohebné</button>
+  <button data-mode="sentence">🔍 Urči ve větě</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const DRUHY = [
+  { n: 1, name: "podstatná jména", q: "Kdo? Co?", d: "názvy osob, zvířat, věcí, míst, vlastností a dějů", ex: ["pes", "škola", "maminka", "strom", "Praha", "radost", "kolo", "Petr", "kniha", "sníh"] },
+  { n: 2, name: "přídavná jména", q: "Jaký? Který? Čí?", d: "vlastnosti podstatných jmen", ex: ["velký", "modrý", "otcův", "rychlý", "krásná", "dřevěný", "mámin", "chytrý", "zelená", "sestřin"] },
+  { n: 3, name: "zájmena", q: "zastupují jména", d: "zastupují podstatná a přídavná jména", ex: ["já", "ty", "on", "my", "ten", "můj", "náš", "kdo", "jejich", "tvůj"] },
+  { n: 4, name: "číslovky", q: "Kolik? Kolikátý? Kolikrát?", d: "počet a pořadí", ex: ["jeden", "pět", "sto", "první", "třetí", "dvakrát", "deset", "osmý"] },
+  { n: 5, name: "slovesa", q: "Co dělá? Co se s ním děje?", d: "činnosti a stavy", ex: ["běží", "píše", "zpívat", "spím", "čte", "skákal", "myslí", "jíst"] },
+  { n: 6, name: "příslovce", q: "Jak? Kde? Kdy?", d: "okolnosti děje", ex: ["rychle", "včera", "doma", "nahoře", "dnes", "dobře", "tady", "venku"] },
+  { n: 7, name: "předložky", q: "stojí před jménem", d: "pojí se s podstatnými jmény a zájmeny (na stole, do školy)", ex: ["na", "do", "pod", "nad", "před", "za", "bez", "u", "od", "po"] },
+  { n: 8, name: "spojky", q: "spojují", d: "spojují slova a věty", ex: ["a", "ale", "nebo", "protože", "když", "že", "aby", "ani"] },
+  { n: 9, name: "částice", q: "uvozují věty", d: "uvozují věty, vyjadřují přání nebo souhlas", ex: ["ať", "kéž", "ano", "ne", "prý", "nechť"] },
+  { n: 10, name: "citoslovce", q: "zvuky a pocity", d: "napodobují zvuky a vyjadřují pocity", ex: ["haf", "bum", "au", "ach", "hurá", "mňau", "bác", "jé"] },
+];
+const SENTENCES = [
+  "Malý/2 pes/1 rychle/6 běží/5 do/7 lesa/1 .",
+  "Naše/3 babička/1 peče/5 tři/4 koláče/1 .",
+  "Petr/1 a/8 Jana/1 šli/5 včera/6 do/7 kina/1 .",
+  "Haf/10 , štěkal/5 hlasitě/6 velký/2 pes/1 .",
+  "Ano/9 , zítra/6 pojedeme/5 na/7 hory/1 .",
+  "Mám/5 dvě/4 sestry/1 , ale/8 nemám/5 bratra/1 .",
+  "Na/7 stole/1 leží/5 červené/2 jablko/1 .",
+  "Bác/10 ! Ze/7 stromu/1 spadla/5 zralá/2 hruška/1 .",
+  "Dnes/6 píšeme/5 první/4 diktát/1 .",
+  "Kočka/1 spí/5 pod/7 stolem/1 nebo/8 na/7 gauči/1 .",
+  "Jeho/3 kamarád/1 běhá/5 velmi/6 rychle/6 .",
+  "Prý/9 bude/5 zítra/6 pršet/5 .",
+  "Hurá/10 , máme/5 prázdniny/1 !",
+  "Ten/3 modrý/2 batoh/1 patří/5 mně/3 .",
+  "Kluci/1 hráli/5 fotbal/1 , protože/8 svítilo/5 slunce/1 .",
+  "Bratr/1 snědl/5 pět/4 sušenek/1 .",
+  "Ne/9 , tam/6 dnes/6 nepůjdu/5 .",
+  "Au/10 , to/3 bolí/5 !",
+  "Moje/3 sestra/1 čte/5 zajímavou/2 knihu/1 .",
+].map(s => s.split(" ").map(t => { const [w, n] = t.split("/"); return { w, n: n ? +n : 0 }; }));
+const D = n => DRUHY[n - 1];
+
+function learn() {
+  app.innerHTML = `<h2 class="clk" data-say="Deset slovních druhů">📖 10 slovních druhů <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Ohebné slovní druhy se mění, skloňují nebo časují: podstatná jména, přídavná jména, zájmena, číslovky a slovesa. Neohebné se nemění: příslovce, předložky, spojky, částice a citoslovce.">
+      🔀 <b>Ohebné</b> (mění tvar – skloňují se nebo časují): 1 – 5<br>
+      🧱 <b>Neohebné</b> (tvar se nemění): 6 – 10 <span class="ico">🔊</span></div>
+    <table class="t">${DRUHY.map(d => `<tr${d.n === 6 ? ' style="border-top:3px solid #5b4bb7"' : ""}>
+      <td><span class="num">${d.n}</span></td>
+      <td>${czSay(`<b>${d.name}</b>`, `${d.n}. ${d.name}. ${d.q}. ${d.d}.`)}<div class="note">${d.q} – ${d.d}</div></td>
+      <td>${d.ex.map(w => czSay(w)).join("")}</td></tr>`).join("")}</table>`;
+  czBind();
+}
+
+function sortMode() {
+  const cats = shuffle(DRUHY).slice(0, 4).sort((a, b) => a.n - b.n);
+  const items = shuffle(cats.flatMap(d => shuffle(d.ex).slice(0, 3).map(w => ({ t: w, k: d.n, why: `${w} – ${d.name} (${d.q})` }))));
+  cvicSort({ title: "🗂️ Roztřiď slova podle slovního druhu", cols: cats.map(d => ({ k: d.n, t: `${d.n}. ${d.name}` })), items, again: sortMode, wrongWhy: false });
+}
+
+function ohebne() {
+  const items = shuffle(DRUHY.map(d => { const w = pick(d.ex); return { t: w, k: d.n <= 5 ? "o" : "n", why: `${w} – ${d.name} (${d.n}) → ${d.n <= 5 ? "ohebné" : "neohebné"}` }; }));
+  cvicSort({ title: "🔀 Ohebné, nebo neohebné?", cols: [{ k: "o", t: "🔀 ohebné (1–5)" }, { k: "n", t: "🧱 neohebné (6–10)" }], items, again: ohebne });
+}
+
+function sentence() {
+  const set = shuffle(SENTENCES).slice(0, 3);
+  const steps = set.flatMap((s, si) => s.map((t, wi) => ({ si, wi })).filter(x => set[x.si][x.wi].n));
+  let k = 0, correct = 0;
+  const marks = set.map(s => s.map(() => null));
+  function show() {
+    if (k >= steps.length) return finish(correct, steps.length, sentence);
+    const { si, wi } = steps[k], s = set[si], cur = s[wi];
+    const text = s.map(t => t.w).join(" ").replace(/ ([.,!])/g, "$1");
+    app.innerHTML = `${cvicHead("🔍 Urči slovní druh", k, steps.length)}
+      <p class="center clk" id="task">Jaký slovní druh je označené slovo? <span class="ico">🔊</span></p>
+      <div class="sentence">${s.map((t, i) => t.n
+        ? `<span class="w ${i === wi ? "cur" : ""} ${marks[si][i] || ""}" data-i="${i}"><span class="n">${marks[si][i] ? t.n : ""}</span>${t.w}</span>`
+        : `<span class="w p"><span class="n"></span>${t.w}</span>`).join("")}</div>
+      <p class="center"><button class="btn light" id="all">🔊 Přečti větu</button></p>
+      <div class="druhy">${DRUHY.map(d => `<button data-n="${d.n}"><b>${d.n}</b>${d.name}</button>`).join("")}</div>
+      <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    app.querySelector("#task").onclick = () => speakCz("Jaký slovní druh je označené slovo?");
+    app.querySelector("#all").onclick = () => speakCz(text, 0.8);
+    app.querySelectorAll(".sentence .w[data-i]").forEach(el => el.onclick = () => speakCz(s[el.dataset.i].w));
+    speakCz(cur.w);
+    app.querySelectorAll(".druhy button").forEach(b => b.onclick = () => {
+      const fb = app.querySelector("#fb"), d = D(cur.n), ok = +b.dataset.n === cur.n;
+      app.querySelectorAll(".druhy button").forEach(x => { x.disabled = true; if (+x.dataset.n === cur.n) x.classList.add("ok"); });
+      speakCz(`${cur.w} – ${d.name}`);
+      marks[si][wi] = ok ? "ok" : "bad";
+      app.querySelector(".w.cur").classList.add(marks[si][wi]);
+      app.querySelector(".w.cur .n").textContent = cur.n;
+      if (ok) {
+        correct++; addScore(2);
+        fb.innerHTML = `<span class="good">Výborně! ⭐ ${cur.w} = ${d.n}. ${d.name}</span>`;
+        setTimeout(() => { k++; show(); }, 1500);
+      } else {
+        b.classList.add("bad");
+        fb.innerHTML = `<span class="badc">${cur.w} = ${d.n}. ${d.name}<span class="note">${d.q} – ${d.d}</span></span>`;
+        const nx = app.querySelector("#nx"); nx.innerHTML = `<button class="btn">Další ➡️</button>`; nx.firstChild.onclick = () => { k++; show(); };
+      }
+    });
+  }
+  show();
+}
+
+skolaStart({ scoreKey: "cjSlovniDruhyScore", english: false, modes: { learn, sortMode, ohebne, sentence } });
+</script>
+</body>
+</html>
