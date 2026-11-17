@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E">
+<title>Počítání zpaměti do 1000 🧠</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .ex { text-align: center; font-size: 1.4rem; margin: 6px 0; }
+  .steps { text-align: center; font-size: 1.3rem; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🧠 Zpaměti do 1000</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="round">🎯 Stovky a desítky</button>
+  <button data-mode="three">🔢 Trojciferné ± dvojciferné</button>
+  <button data-mode="mixed">🔀 Smíšené</button>
+  <button data-mode="sprint">⏱️ Minutovka</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+/* rozklad druhého čísla po řádech: 237 → [200, 30, 7] */
+const placeParts = b => [Math.floor(b / 100) * 100, Math.floor(b / 10) % 10 * 10, b % 10].filter(x => x);
+function make(a, b, op) {
+  const s = op === "+" ? "+" : "−", f = (x, y) => op === "+" ? x + y : x - y, res = f(a, b), parts = placeParts(b);
+  let help;
+  if (parts.length === 1) help = `<div class="steps">Počítej po ${b % 100 === 0 ? "stovkách" : b % 10 === 0 ? "desítkách" : "jednotkách"}${b % 10 === 0 && b < 100 && Math.floor(a / 100) !== Math.floor(res / 100) ? " – pozor, přejdeš přes stovku!" : "."}</div>`;
+  else {
+    let cur = a; const lines = [];
+    parts.forEach((p, k) => { const nx = f(cur, p); lines.push(k < parts.length - 1 ? `${cur} ${s} ${p} = ${nx}` : `${cur} ${s} ${p} = ?`); cur = nx; });
+    help = `<div class="steps">${a} ${s} ${b} = ${a} ${s} ${parts.join(` ${s} `)}<br>${lines.join("<br>")}</div>`;
+  }
+  return { q: `${a} ${s} ${b}`, a: res, help };
+}
+function genRound() {
+  const op = Math.random() < .5 ? "+" : "-";
+  const kind = rnd(0, 2);
+  let a, b;
+  if (kind === 0) { a = rnd(1, 9) * 100; b = rnd(1, 9) * 100; }
+  else if (kind === 1) { a = rnd(10, 99) * 10; b = rnd(1, 9) * 10; }
+  else { a = rnd(10, 99) * 10; b = rnd(11, 89) * 10; }
+  if (op === "+" ? a + b > 1000 : a <= b) return genRound();
+  return make(a, b, op);
+}
+function genThree() {
+  const op = Math.random() < .5 ? "+" : "-";
+  const a = rnd(100, 980), b = Math.random() < .3 ? rnd(2, 9) : rnd(11, 99);
+  if (op === "+" ? a + b > 1000 : a - b < 1) return genThree();
+  return make(a, b, op);
+}
+function genEdge() {
+  const k = rnd(0, 3);
+  if (k === 0) { const a = rnd(1, 10) * 100, b = rnd(1, 99); return make(a, b, "-"); }
+  if (k === 1) { const b = rnd(11, 99) * 10; return make(1000, b, "-"); }
+  if (k === 2) { const a = rnd(101, 899), b = rnd(101, 999 - a); return b % 100 && a % 10 ? make(a, b, "+") : genEdge(); }
+  const a = rnd(300, 999), b = rnd(101, a - 100); return a % 10 && b % 10 ? make(a, b, "-") : genEdge();
+}
+const genMixed = () => [genRound, genThree, genEdge][rnd(0, 2)]();
+
+function learn() {
+  const ex = [
+    ["400 + 300 = 700", "4 stovky a 3 stovky je 7 stovek.", "400 plus 300. 4 stovky a 3 stovky je 7 stovek, tedy 700."],
+    ["470 + 50 = 520", "470 + 30 = 500, 500 + 20 = 520", "470 plus 50. Nejdřív doplním do stovky: 470 plus 30 je 500. Pak 500 plus 20 je 520."],
+    ["356 + 27 = 383", "356 + 20 = 376, 376 + 7 = 383", "356 plus 27. Nejdřív desítky: 356 plus 20 je 376. Pak jednotky: 376 plus 7 je 383."],
+    ["482 − 35 = 447", "482 − 30 = 452, 452 − 5 = 447", "482 mínus 35. Nejdřív desítky: 482 mínus 30 je 452. Pak jednotky: 452 mínus 5 je 447."],
+    ["1000 − 360 = 640", "1000 − 300 = 700, 700 − 60 = 640", "1000 mínus 360. 1000 mínus 300 je 700. 700 mínus 60 je 640."],
+    ["600 − 8 = 592", "600 − 10 = 590, 590 + 2 = 592", "600 mínus 8. Odečtu 10, to je 590, a 2 vrátím zpátky: 592."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Počítání zpaměti do tisíce">📖 Počítání zpaměti do 1000 <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Druhé číslo rozložím na stovky, desítky a jednotky a přičítám nebo odečítám postupně.">💡 Druhé číslo <b>rozložím</b> na stovky, desítky a jednotky a počítám <b>postupně</b>. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Když přecházím přes stovku, nejdřív doplním do celé stovky.">🎯 Když přecházím přes stovku, nejdřív doplním do <b>celé stovky</b>. <span class="ico">🔊</span></div>
+    ${ex.map(([q, how, say]) => `<div class="box clk" data-say="${say}"><div class="ex"><b>${q}</b> <span class="ico">🔊</span></div><div class="note center">${how}</div></div>`).join("")}`;
+  czBind();
+}
+
+const round = () => cvicNumbers({ title: "🎯 Stovky a desítky", gen: genRound, again: round });
+const three = () => cvicNumbers({ title: "🔢 Trojciferné ± dvojciferné", gen: genThree, again: three });
+const mixed = () => cvicNumbers({ title: "🔀 Smíšené příklady", gen: genMixed, again: mixed, count: 12 });
+const sprint = () => cvicSprint({ title: "Minutovka do 1000", gen: () => Math.random() < .5 ? genRound() : genThree(), id: "do1000" });
+
+skolaStart({ scoreKey: "mPametneDo1000Score", english: false, modes: { learn, round, three, mixed, sprint } });
+</script>
+</body>
+</html>
