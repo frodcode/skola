@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anglická abeceda 🔤</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: linear-gradient(135deg,#8ec5fc,#e0c3fc); min-height: 100vh; color: #222; }
+  header { text-align: center; padding: 18px 10px 6px; }
+  h1 { margin: 0; font-size: 2rem; color: #fff; text-shadow: 2px 2px 0 #5b4bb7; }
+  .score { margin-top: 6px; font-size: 1.2rem; color: #fff; font-weight: bold; }
+  nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 12px; }
+  nav button { font-size: 1.05rem; padding: 10px 18px; border: none; border-radius: 30px; cursor: pointer; background: #fff; color: #5b4bb7; font-weight: bold; box-shadow: 0 3px 0 #5b4bb7; }
+  nav button.active { background: #5b4bb7; color: #fff; }
+  main { max-width: 820px; margin: 0 auto 30px; background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,.15); }
+  h2 { margin-top: 0; color: #5b4bb7; }
+  h3 { color: #3a2d99; margin: 18px 0 6px; }
+  .big { font-size: 2.2rem; text-align: center; margin: 10px 0; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .options.three { grid-template-columns: 1fr 1fr 1fr; }
+  .options button { font-size: 1.15rem; padding: 14px; border-radius: 12px; border: 2px solid #5b4bb7; background: #fff; cursor: pointer; }
+  .options button.ok { background: #c8f7c5; border-color: #2d7a2a; }
+  .options button.bad { background: #ffc9c9; border-color: #c0392b; }
+  input[type=text] { width: 100%; font-size: 1.5rem; padding: 12px; border-radius: 12px; border: 3px solid #5b4bb7; text-align: center; }
+  .btn { font-size: 1.1rem; padding: 10px 20px; border-radius: 12px; border: none; background: #5b4bb7; color: #fff; cursor: pointer; margin: 8px 4px 0; }
+  .btn.light { background: #eee; color: #333; }
+  .feedback { min-height: 32px; font-size: 1.2rem; text-align: center; margin-top: 10px; font-weight: bold; }
+  .good { color: #2d7a2a; } .badc { color: #c0392b; }
+  .note { display: block; font-weight: normal; color: #555; font-size: 1rem; margin-top: 4px; }
+  .progress { height: 12px; background: #eee; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .progress div { height: 100%; background: #5b4bb7; transition: width .3s; }
+  .center { text-align: center; }
+  .hint { color: #888; letter-spacing: 4px; font-size: 1.3rem; text-align: center; margin: 6px 0; font-family: monospace; }
+  .voice { margin-top: 8px; color: #fff; font-weight: bold; }
+  .voice select { font-size: .95rem; padding: 4px 8px; border-radius: 8px; max-width: 90vw; }
+  .voicewarn { max-width: 700px; margin: 8px auto 0; background: #fff3cd; color: #6b4e00; border-radius: 10px; font-size: .9rem; padding: 0; }
+  .voicewarn:not(:empty) { padding: 8px 12px; }
+  .box { background: #f3f0ff; border-radius: 14px; padding: 10px 16px; margin: 10px 0; }
+  table.t { border-collapse: collapse; width: 100%; margin: 6px 0 4px; }
+  table.t td, table.t th { padding: 8px 10px; border-bottom: 1px solid #e5e0ff; text-align: left; }
+  table.t th { color: #5b4bb7; }
+  table.t tr.say { cursor: pointer; }
+  table.t tr.say:hover { background: #f3f0ff; }
+  .en { font-weight: bold; color: #3a2d99; }
+  .short { color: #888; }
+  .sent { font-size: 1.6rem; text-align: center; margin: 14px 0 6px; font-weight: bold; color: #3a2d99; }
+  .gap { display: inline-block; min-width: 80px; border-bottom: 3px solid #5b4bb7; color: #5b4bb7; }
+  .cz { color: #555; text-align: center; font-size: 1.15rem; }
+  .wrap { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: 64px; padding: 8px; margin: 10px 0; border-radius: 14px; }
+  .wrap.ans { border: 3px dashed #5b4bb7; background: #faf9ff; }
+  .wt { padding: 10px 14px; background: #f3f0ff; border-radius: 10px; font-size: 1.25rem; cursor: pointer; border: 2px solid #5b4bb7; user-select: none; }
+  .wt:hover { background: #ddd6ff; }
+  .punct { font-size: 1.6rem; font-weight: bold; color: #5b4bb7; }
+  .ok-x { color: #2d7a2a; font-weight: bold; } .no-x { color: #c0392b; font-weight: bold; }
+  @media (max-width: 560px) { .options, .options.three { grid-template-columns: 1fr; } }
+</style>
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 10px; }
+  .card { background: #f3f0ff; border-radius: 14px; padding: 10px; text-align: center; cursor: pointer; border: 3px solid transparent; user-select: none; }
+  .card:hover { border-color: #5b4bb7; }
+  .card .let { font-size: 2.2rem; font-weight: bold; color: #3a2d99; }
+  .card .pr { color: #c0392b; font-weight: bold; }
+  .card .w { color: #555; font-size: .95rem; }
+  .letbtn { font-size: 2rem !important; font-weight: bold; }
+  .play { font-size: 3rem; background: #f3f0ff; border: 3px solid #5b4bb7; border-radius: 50%; width: 110px; height: 110px; cursor: pointer; display: block; margin: 10px auto; }
+  .tile { display: inline-block; min-width: 64px; padding: 14px; margin: 6px; border-radius: 12px; background: #f3f0ff; font-size: 2rem; font-weight: bold; color: #3a2d99; cursor: pointer; border: 3px solid #5b4bb7; user-select: none; }
+  .tile.done { background: #c8f7c5; color: #2d7a2a; border-color: #2d7a2a; cursor: default; }
+  .tile.wrong { background: #ffc9c9; animation: shake .3s; }
+  @keyframes shake { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  input.one { max-width: 140px; display: block; margin: 0 auto; font-size: 2.4rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔤 Anglická abeceda – The Alphabet</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="letter">⌨️ Napiš písmeno</button>
+  <button data-mode="spell">🔡 Hláskování</button>
+  <button data-mode="sort">🔢 Seřaď</button>
+</nav>
+<main id="app"></main>
+
+<script>
+/* say = text, který hlas přečte jako název písmene (britská výslovnost); cz = česká pomůcka */
+const LETTERS = [
+  { l: "A", say: "A.", cz: "ej", w: "apple", e: "🍎" },
+  { l: "B", say: "bee", cz: "bí", w: "ball", e: "⚽" },
+  { l: "C", say: "see", cz: "sí", w: "cat", e: "🐱" },
+  { l: "D", say: "dee", cz: "dí", w: "dog", e: "🐶" },
+  { l: "E", say: "ee", cz: "í", w: "egg", e: "🥚" },
+  { l: "F", say: "eff", cz: "ef", w: "fish", e: "🐟" },
+  { l: "G", say: "gee", cz: "dží", w: "girl", e: "👧" },
+  { l: "H", say: "aitch", cz: "ejč", w: "house", e: "🏠" },
+  { l: "I", say: "eye", cz: "aj", w: "ice cream", e: "🍦" },
+  { l: "J", say: "jay", cz: "džej", w: "juice", e: "🧃" },
+  { l: "K", say: "kay", cz: "kej", w: "key", e: "🔑" },
+  { l: "L", say: "el", cz: "el", w: "lion", e: "🦁" },
+  { l: "M", say: "em", cz: "em", w: "milk", e: "🥛" },
+  { l: "N", say: "en", cz: "en", w: "nose", e: "👃" },
+  { l: "O", say: "oh", cz: "ou", w: "orange", e: "🍊" },
+  { l: "P", say: "pee", cz: "pí", w: "pen", e: "🖊️" },
+  { l: "Q", say: "queue", cz: "kjú", w: "queen", e: "👑" },
+  { l: "R", say: "are", cz: "á", w: "rabbit", e: "🐰" },
+  { l: "S", say: "ess", cz: "es", w: "sun", e: "☀️" },
+  { l: "T", say: "tee", cz: "tí", w: "tree", e: "🌳" },
+  { l: "U", say: "you", cz: "jú", w: "umbrella", e: "☂️" },
+  { l: "V", say: "vee", cz: "ví", w: "van", e: "🚐" },
+  { l: "W", say: "double you", cz: "dabl jú", w: "window", e: "🪟" },
+  { l: "X", say: "ex", cz: "eks", w: "fox", e: "🦊" },
+  { l: "Y", say: "why", cz: "waj", w: "yellow", e: "💛" },
+  { l: "Z", say: "zed", cz: "zed", w: "zebra", e: "🦓" },
+];
+const BY = Object.fromEntries(LETTERS.map(x => [x.l, x]));
+/* často zaměňovaná písmena */
+const CONFUSE = [["E", "I", "A", "Y"], ["A", "R", "H", "E", "I"], ["G", "J"], ["K", "Q", "C"], ["B", "P", "V", "D", "E"], ["U", "W", "Q", "Y"], ["S", "X", "F"], ["M", "N"]];
+const SPELL = [
+  { w: "cat", cz: "kočka", e: "🐱" }, { w: "dog", cz: "pes", e: "🐶" }, { w: "pen", cz: "pero", e: "🖊️" },
+  { w: "bag", cz: "taška", e: "👜" }, { w: "red", cz: "červená", e: "🔴" }, { w: "sun", cz: "slunce", e: "☀️" },
+  { w: "box", cz: "krabice", e: "📦" }, { w: "egg", cz: "vejce", e: "🥚" }, { w: "hat", cz: "klobouk", e: "🎩" },
+  { w: "fox", cz: "liška", e: "🦊" }, { w: "bed", cz: "postel", e: "🛏️" }, { w: "cup", cz: "hrnek", e: "☕" },
+  { w: "map", cz: "mapa", e: "🗺️" }, { w: "key", cz: "klíč", e: "🔑" }, { w: "zoo", cz: "zoo", e: "🦒" },
+  { w: "bus", cz: "autobus", e: "🚌" }, { w: "yes", cz: "ano", e: "👍" }, { w: "van", cz: "dodávka", e: "🚐" },
+  { w: "jam", cz: "džem", e: "🍓" }, { w: "girl", cz: "holka", e: "👧" }, { w: "book", cz: "kniha", e: "📖" },
+  { w: "milk", cz: "mléko", e: "🥛" }, { w: "frog", cz: "žába", e: "🐸" }, { w: "duck", cz: "kachna", e: "🦆" },
+  { w: "quiz", cz: "kvíz", e: "❓" }, { w: "juice", cz: "džus", e: "🧃" }, { w: "happy", cz: "šťastný", e: "😊" },
+  { w: "zebra", cz: "zebra", e: "🦓" }, { w: "queen", cz: "královna", e: "👑" }, { w: "school", cz: "škola", e: "🏫" },
+  { w: "eye", cz: "oko", e: "👁️" }, { w: "jelly", cz: "želé", e: "🍮" }, { w: "gym", cz: "tělocvična", e: "🏀" },
+];
+
+let score = +(localStorage.getItem("abcScore") || 0);
+const app = document.getElementById("app");
+const scoreEl = document.getElementById("score");
+scoreEl.textContent = score;
+
+function addScore(n) { score += n; localStorage.setItem("abcScore", score); scoreEl.textContent = score; }
+function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+let voices = [], voice = null;
+const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
+function voiceRank(v) {
+  const l = v.lang.replace("_", "-").toLowerCase(), n = v.name.toLowerCase();
+  let r = 0;
+  if (l === "en-gb" || /united kingdom|uk english|british/.test(n)) r += 100;
+  if (/natural|online|neural/.test(n)) r += 20;
+  if (/google/.test(n)) r += 10;
+  if (/sonia|ryan|libby|hazel|george|susan|daniel|kate|serena/.test(n)) r += 5;
+  return r;
+}
+function loadVoices() {
+  if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
+  voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  const hasGB = voices.some(v => voiceRank(v) >= 100);
+  voiceWarn.innerHTML = hasGB ? "" :
+    "⚠️ Britský hlas nenalezen. Otevřete stránku v <b>Microsoft Edge</b> (hlasy Sonia/Ryan) nebo v <b>Chrome</b> (Google UK English), " +
+    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.";
+  if (!voices.length) { voiceSel.innerHTML = "<option>žádný anglický hlas</option>"; return; }
+  const saved = localStorage.getItem("schoolVoice");
+  voice = voices.find(v => v.name === saved) || voices[0];
+  voiceSel.innerHTML = voices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+  voiceSel.value = voice.name;
+}
+voiceSel.onchange = () => { voice = voices.find(v => v.name === voiceSel.value); localStorage.setItem("schoolVoice", voice.name); speakSeq(["A.", "bee", "see"]); };
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; } else loadVoices();
+
+let seqToken = 0;
+function utter(text, rate) {
+  const u = new SpeechSynthesisUtterance(text);
+  if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
+  u.rate = rate || 0.85;
+  return u;
+}
+function speak(text) { speakSeq([text]); }
+/* čte položky postupně s pauzou mezi nimi (hláskování) */
+function speakSeq(items, pause = 350, rate) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const id = ++seqToken;
+  let k = 0;
+  const next = () => {
+    if (id !== seqToken || k >= items.length) return;
+    const u = utter(items[k++], rate);
+    u.onend = () => setTimeout(next, pause);
+    speechSynthesis.speak(u);
+  };
+  next();
+}
+const sayLetter = l => BY[l.toUpperCase()].say;
+function norm(s) { return s.toLowerCase().replace(/[’`]/g, "'").replace(/\s+/g, " ").trim(); }
+
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  ({ learn, listen, letter, spell, sort })[b.dataset.mode]();
+});
+
+/* 📖 Learn */
+function learn() {
+  app.innerHTML = `<h2>📖 Abeceda – klikni na písmeno a poslechni si ho</h2>
+    <div class="center" style="margin-bottom:12px">
+      <button class="btn" id="all">▶️ Přehrát celou abecedu</button>
+      <button class="btn light" id="stop">⏹️ Stop</button>
+    </div>
+    <div class="grid">${LETTERS.map(x => `<div class="card" data-l="${x.l}"><div class="let">${x.l} ${x.l.toLowerCase()}</div><div class="pr">[${x.cz}]</div><div class="w">${x.e} ${x.w}</div></div>`).join("")}</div>
+    <h3>⚠️ Pozor na tato písmena</h3>
+    <div class="box">
+      <b>E</b> [í] × <b>I</b> [aj] – v angličtině je to „obráceně“ než v češtině!<br>
+      <b>A</b> [ej] × <b>R</b> [á] × <b>H</b> [ejč]<br>
+      <b>G</b> [dží] × <b>J</b> [džej]<br>
+      <b>K</b> [kej] × <b>Q</b> [kjú] &nbsp;·&nbsp; <b>U</b> [jú] × <b>W</b> [dabl jú] &nbsp;·&nbsp; <b>Y</b> [waj]<br>
+      <b>Z</b> se v britské angličtině čte [zed] (v americké [zí]).
+    </div>
+    <p class="center" style="color:#888">České pomůcky v [závorkách] jsou jen přibližné – nejlepší je poslouchat 🔊</p>`;
+  app.querySelectorAll(".card").forEach(c => c.onclick = () => { const x = BY[c.dataset.l]; speakSeq([x.say, x.w], 500); });
+  app.querySelector("#all").onclick = () => speakSeq(LETTERS.map(x => x.say), 150);
+  app.querySelector("#stop").onclick = () => { seqToken++; speechSynthesis.cancel(); };
+}
+
+function distractors(l, n) {
+  const near = shuffle([...new Set(CONFUSE.filter(g => g.includes(l)).flat())].filter(x => x !== l));
+  const rest = shuffle(LETTERS.map(x => x.l).filter(x => x !== l && !near.includes(x)));
+  return [...near, ...rest].slice(0, n);
+}
+
+/* 👂 Listen and choose */
+function listen() {
+  const order = shuffle(LETTERS).slice(0, 10);
+  let i = 0, correct = 0;
+  function show() {
+    if (i >= order.length) return finish(correct, order.length, listen);
+    const x = order[i];
+    const opts = shuffle([x.l, ...distractors(x.l, 3)]);
+    app.innerHTML = `<h2>👂 Které písmeno slyšíš? (${i + 1}/${order.length})</h2>
+      <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+      <button class="play" id="play" title="Přehrát znovu">🔊</button>
+      <p class="center">Klikni na 🔊 a poslechni si to znovu.</p>
+      <div class="options">${opts.map(o => `<button class="letbtn" data-k="${o}">${o} ${o.toLowerCase()}</button>`).join("")}</div>
+      <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    speak(x.say);
+    app.querySelector("#play").onclick = () => speak(x.say);
+    app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+      app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.k === x.l) y.classList.add("ok"); });
+      const fb = app.querySelector("#fb");
+      if (b.dataset.k === x.l) {
+        correct++; addScore(2); speak(x.say);
+        fb.innerHTML = `<span class="good">Výborně! ⭐ ${x.l} [${x.cz}]</span>`;
+        setTimeout(() => { i++; show(); }, 1500);
+      } else {
+        b.classList.add("bad");
+        const w = BY[b.dataset.k];
+        fb.innerHTML = `<span class="badc">Bylo to <b>${x.l}</b> [${x.cz}]<span class="note">Ty jsi vybral ${w.l} – to se čte [${w.cz}]</span></span>`;
+        speakSeq([x.say, w.say], 600);
+        const n = app.querySelector("#nx"); n.innerHTML = `<button class="btn">Další ➡️</button>`; n.firstChild.onclick = () => { i++; show(); };
+      }
+    });
+  }
+  show();
+}
+
+/* ⌨️ Listen and type the letter */
+function letter() {
+  const order = shuffle(LETTERS).slice(0, 10);
+  let i = 0, correct = 0, tries = 0;
+  function show() {
+    if (i >= order.length) return finish(correct, order.length, letter);
+    const x = order[i]; tries = 0;
+    app.innerHTML = `<h2>⌨️ Napiš písmeno, které slyšíš (${i + 1}/${order.length})</h2>
+      <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+      <button class="play" id="play" title="Přehrát znovu">🔊</button>
+      <input type="text" class="one" id="inp" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="center">
+        <button class="btn" id="check">✔️ Zkontrolovat</button>
+        <button class="btn light" id="skip">⏭️ Nevím</button>
+      </div>
+      <div class="feedback" id="fb"></div>`;
+    const inp = app.querySelector("#inp"), fb = app.querySelector("#fb");
+    speak(x.say); inp.focus();
+    app.querySelector("#play").onclick = () => { speak(x.say); inp.focus(); };
+    const next = () => setTimeout(() => { i++; show(); }, 1700);
+    const fail = () => { fb.innerHTML = `<span class="badc">Bylo to <b>${x.l}</b> [${x.cz}]</span>`; speak(x.say); inp.disabled = true; order.push(x); next(); };
+    const check = () => {
+      const v = inp.value.trim().toUpperCase();
+      if (!v) return;
+      if (v === x.l) {
+        const pts = Math.max(1, 3 - tries);
+        correct++; addScore(pts); speak(x.say);
+        fb.innerHTML = `<span class="good">Správně! 🎉 +${pts} &nbsp; ${x.l} [${x.cz}]</span>`;
+        inp.disabled = true; next();
+      } else {
+        tries++;
+        const w = BY[v];
+        if (tries >= 3) fail();
+        else { fb.innerHTML = `<span class="badc">Ještě ne (pokus ${tries}/3)${w ? `<span class="note">${w.l} se čte [${w.cz}] – poslechni si to znovu 🔊</span>` : ""}</span>`; inp.select(); }
+      }
+    };
+    app.querySelector("#check").onclick = check;
+    inp.onkeydown = e => { if (e.key === "Enter") check(); };
+    app.querySelector("#skip").onclick = () => { if (!inp.disabled) fail(); };
+  }
+  show();
+}
+
+/* 🔡 Spelling */
+function spell() {
+  const order = shuffle(SPELL).slice(0, 8);
+  let i = 0, correct = 0, tries = 0, hintLen = 0;
+  function show() {
+    if (i >= order.length) return finish(correct, order.length, spell);
+    const x = order[i]; tries = 0; hintLen = 0;
+    const letters = [...x.w.toUpperCase()].map(sayLetter);
+    const play = slow => speakSeq(letters, slow ? 900 : 450, slow ? 0.7 : 0.85);
+    app.innerHTML = `<h2>🔡 Poslechni hláskování a napiš slovo (${i + 1}/${order.length})</h2>
+      <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+      <button class="play" id="play" title="Vyhláskovat znovu">🔊</button>
+      <div class="center"><button class="btn light" id="slow">🐢 Pomaleji</button></div>
+      <div class="hint" id="hint"></div>
+      <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="napiš slovo">
+      <div class="center">
+        <button class="btn" id="check">✔️ Zkontrolovat</button>
+        <button class="btn light" id="hintBtn">💡 Nápověda</button>
+        <button class="btn light" id="skip">⏭️ Nevím</button>
+      </div>
+      <div class="feedback" id="fb"></div>`;
+    const inp = app.querySelector("#inp"), fb = app.querySelector("#fb"), hint = app.querySelector("#hint");
+    const renderHint = () => hint.textContent = [...x.w].map((c, k) => k < hintLen ? c : "_").join("");
+    renderHint(); play(); inp.focus();
+    app.querySelector("#play").onclick = () => { play(); inp.focus(); };
+    app.querySelector("#slow").onclick = () => { play(true); inp.focus(); };
+    const next = () => setTimeout(() => { i++; show(); }, 2000);
+    const fail = () => { fb.innerHTML = `<span class="badc">Správně je: <b>${x.w}</b> ${x.e} (${x.cz})</span>`; speak(x.w); inp.disabled = true; order.push(x); next(); };
+    const check = () => {
+      const v = norm(inp.value).replace(/[\s-]/g, "");
+      if (!v) return;
+      if (v === x.w) {
+        const pts = Math.max(1, 3 - tries - hintLen);
+        correct++; addScore(pts); speak(x.w);
+        fb.innerHTML = `<span class="good">Správně! 🎉 +${pts} &nbsp; ${x.e} ${x.w} = ${x.cz}</span>`;
+        inp.disabled = true; next();
+      } else {
+        tries++;
+        if (tries >= 3) fail();
+        else fb.innerHTML = `<span class="badc">Ještě ne, poslechni si to znovu (pokus ${tries}/3)</span>`;
+      }
+    };
+    app.querySelector("#check").onclick = check;
+    inp.onkeydown = e => { if (e.key === "Enter") check(); };
+    app.querySelector("#hintBtn").onclick = () => { if (hintLen < x.w.length) { hintLen++; renderHint(); } inp.focus(); };
+    app.querySelector("#skip").onclick = () => { if (!inp.disabled) fail(); };
+  }
+  show();
+}
+
+/* 🔢 Alphabetical order */
+function sort() {
+  const sizes = [4, 4, 5, 5, 6, 6];
+  let i = 0, correct = 0;
+  function show() {
+    if (i >= sizes.length) return finish(correct, sizes.length, sort);
+    const set = shuffle(LETTERS).slice(0, sizes[i]).map(x => x.l);
+    const target = [...set].sort();
+    let pos = 0, mistakes = 0;
+    app.innerHTML = `<h2>🔢 Klikej na písmena v pořadí podle abecedy (${i + 1}/${sizes.length})</h2>
+      <div class="progress"><div style="width:${i / sizes.length * 100}%"></div></div>
+      <div class="center" id="tiles">${shuffle(set).map(l => `<span class="tile" data-l="${l}">${l}</span>`).join("")}</div>
+      <div class="wrap ans" id="ans"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="center"><button class="btn light" id="abc">🔤 Ukázat abecedu</button></div>
+      <div class="hint" id="abcLine"></div>`;
+    const ans = app.querySelector("#ans"), fb = app.querySelector("#fb");
+    app.querySelector("#abc").onclick = () => app.querySelector("#abcLine").textContent = LETTERS.map(x => x.l).join(" ");
+    app.querySelectorAll("#tiles .tile").forEach(t => t.onclick = () => {
+      if (t.classList.contains("done")) return;
+      speak(sayLetter(t.dataset.l));
+      if (t.dataset.l === target[pos]) {
+        t.classList.add("done"); pos++;
+        const s = document.createElement("span"); s.className = "tile done"; s.textContent = t.dataset.l; ans.appendChild(s);
+        if (pos === target.length) {
+          const pts = Math.max(1, 3 - mistakes);
+          if (!mistakes) correct++;
+          addScore(pts);
+          fb.innerHTML = `<span class="good">🎉 Hotovo! +${pts} ${mistakes ? `(chyb: ${mistakes})` : ""}</span>`;
+          setTimeout(() => { speakSeq(target.map(sayLetter), 200); }, 700);
+          setTimeout(() => { i++; show(); }, 2600);
+        } else fb.innerHTML = `<span class="good">👍</span>`;
+      } else {
+        mistakes++; t.classList.add("wrong");
+        fb.innerHTML = `<span class="badc">Ještě ne – které písmeno je v abecedě dřív? 🙂</span>`;
+        setTimeout(() => t.classList.remove("wrong"), 400);
+      }
+    });
+  }
+  show();
+}
+
+function finish(correct, total, again) {
+  const pct = correct / total;
+  const msg = pct === 1 ? "🏆 Perfektní!" : pct >= 0.7 ? "🌟 Skvělá práce!" : "💪 Dobrý začátek, procvič si to ještě!";
+  app.innerHTML = `<div class="center"><h2>${msg}</h2><div class="big">${correct} / ${total}</div>
+    <button class="btn" id="again">🔄 Znovu</button></div>`;
+  app.querySelector("#again").onclick = again;
+}
+
+learn();
+</script>
+</body>
+</html>
