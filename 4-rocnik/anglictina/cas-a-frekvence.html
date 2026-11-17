@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Čas a frekvence – Time ⏰</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>⏰ Time – Čas a jak často</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const bar = n => `<span style="display:inline-flex;gap:.06em;vertical-align:-.1em">${[0, 1, 2, 3].map(k => `<span style="width:.28em;height:.9em;border-radius:.06em;background:${k < n ? "#43a047" : "#ddd"}"></span>`).join("")}</span>`;
+const time = [
+  { cz: "hodina", en: "hour", e: "🕐" },
+  { cz: "den", en: "day", e: "🌞" },
+  { cz: "každý den", en: "every day", alt: ["everyday"], e: "🔁" },
+  { cz: "ráno", en: "morning", e: "🌅" },
+  { cz: "dnes ráno", en: "this morning", e: "🌅👉" },
+  { cz: "dnes", en: "today", e: "📅" },
+  { cz: "víkend", en: "weekend", e: "🛋️" },
+  { cz: "červen", en: "June", e: "🌻" },
+];
+const often = [
+  { cz: "vždy", en: "always", e: bar(4) },
+  { cz: "často", en: "often", e: bar(3) },
+  { cz: "někdy", en: "sometimes", e: bar(2) },
+  { cz: "zřídka", en: "rarely", alt: ["seldom"], e: bar(1) },
+  { cz: "nikdy", en: "never", e: bar(0) },
+];
+skolaVocab({
+  scoreKey: "timeScore",
+  demo: "I always eat breakfast in the morning.",
+  words: [...time, ...often],
+  groups: [
+    { title: "⏰ Čas", words: time },
+    { title: "🔁 Jak často?", words: often },
+  ],
+  learnExtra: `<div class="box">💡 <b>always</b> ${bar(4)} → <b>often</b> → <b>sometimes</b> → <b>rarely</b> → <b>never</b> ${bar(0)}<br>
+    Tato slova dáváme před sloveso: I <b>often</b> play football. He <b>never</b> eats fish.<br>
+    Měsíce píšeme s <b>velkým písmenem</b>: June.</div>`,
+});
+</script>
+</body>
+</html>

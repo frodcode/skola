@@ -14,6 +14,7 @@ common/skola.css, skola.js    sdílený styl + logika (hlas, body, režimy, engi
 
 - Názvy souborů a adresářů piš bez diakritiky a mezer, slova odděluj pomlčkou (`veci-denni-potreby.html`).
 - Každou novou stránku přidej jako dlaždici do `index.html` v nadřazeném adresáři.
+- Rozcestník angličtiny má sekce `<h2 class="sec">📖 Slovníčky</h2>` a `<h2 class="sec">✏️ Gramatika a cvičení</h2>`. Dlaždice slovníčku má class `tile vocab` (zelený okraj a štítek „📖 slovníček“) a jednu ikonu tématu, která se mezi dlaždicemi neopakuje.
 - Odkaz zpět na stránce: `<a class="home" href="index.html">← Všechna témata</a>`.
 - Cesty ke společným souborům jsou relativní: `../../common/skola.css` a `../../common/skola.js`.
 
@@ -28,7 +29,9 @@ common/skola.css, skola.js    sdílený styl + logika (hlas, body, režimy, engi
    - Volitelně `learnExtra: "<div class='box'>…</div>"` přidá vysvětlení pod kartičky.
 4. Vzor s členy a vysvětlením: `veci-denni-potreby.html`.
 5. Režim 👂 Poslech (zazní slovo, dítě klikne na 1 ze 4 obrázků – bez čtení): přidej do `<nav>` tlačítko `data-mode="listen"`. `e` může být i HTML (barevná tečka, SVG).
-6. `groups: [{ title, words }]` rozdělí Učím se do sekcí s nadpisy; může obsahovat i slova mimo `words` (bonus).
+6. `groups: [{ title, words }]` rozdělí Učím se do sekcí s nadpisy; může obsahovat i slova mimo `words` (bonus). Vzor: `skola-slovicka.html` (pole `rooms`, `subjects`… a `words: [...rooms, ...subjects]`).
+7. V rámci stránky musí být `en` i `cz` unikátní (Přiřazování páruje podle `en`, Kvíz nabízí `cz`). U shodného překladu je rozliš (`dítě` / `děcko`).
+8. Slovníčky 4. ročníku vycházejí z `../anglicke-materialy/slovnicek.md` (mimo repo). Při přidání slovíčka do stránky doplň i md a naopak; téma Gramatika z md se jako slovníček nezobrazuje.
 
 ### 2. ročník
 

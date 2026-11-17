@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Místa a budovy – Places 🏠</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🏠 Places – Místa a budovy</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const places = [
+  { cz: "dům", en: "house", e: "🏠" },
+  { cz: "nemocnice", en: "hospital", e: "🏥" },
+  { cz: "zoo", en: "zoo", e: "🦓" },
+  { cz: "park", en: "park", e: "🏞️" },
+  { cz: "venku", en: "outside", e: "🌳" },
+];
+const house = [
+  { cz: "kuchyně", en: "kitchen", e: "🍳" },
+  { cz: "třída (místnost)", en: "classroom", alt: ["class room"], e: "🧑‍🏫" },
+  { cz: "dveře", en: "door", e: "🚪" },
+  { cz: "otevřené dveře", en: "open door", alt: ["an open door"], e: "🚪➡️" },
+  { cz: "okno", en: "window", e: "🪟" },
+  { cz: "komín", en: "chimney", e: "🏠💨" },
+];
+const world = [
+  { cz: "Japonsko", en: "Japan", e: "🗾" },
+  { cz: "Paříž", en: "Paris", e: "🗼" },
+  { cz: "USA", en: "the USA", say: "the U. S. A.", alt: ["usa", "the us", "us", "america", "the united states"], e: "🗽" },
+  { cz: "Jižní Amerika", en: "South America", e: "🌎" },
+  { cz: "Norsko", en: "Norway", e: "🏔️" },
+];
+skolaVocab({
+  scoreKey: "placesScore",
+  demo: "Welcome to my house!",
+  words: [...places, ...house, ...world],
+  groups: [
+    { title: "🏙️ Místa", words: places },
+    { title: "🏠 V domě", words: house },
+    { title: "🌍 Země a města", words: world },
+  ],
+  learnExtra: `<div class="box">💡 Názvy zemí a měst píšeme s <b>velkým písmenem</b>: Japan, Paris, Norway.</div>`,
+});
+</script>
+</body>
+</html>

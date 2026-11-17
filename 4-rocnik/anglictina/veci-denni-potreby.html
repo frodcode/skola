@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#5b4bb7">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
-<title>Věci denní potřeby – Everyday things 🎒</title>
+<title>Věci a předměty – Things 🎒</title>
 <link rel="stylesheet" href="../../common/skola.css">
 </head>
 <body>
 <header>
   <a class="home" href="index.html">← Všechna témata</a><br>
-  <h1>🎒 Everyday things – Věci denní potřeby</h1>
+  <h1>🎒 Things – Věci a předměty</h1>
   <div class="score">⭐ Body: <span id="score">0</span></div>
   <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
   <div class="voicewarn" id="voiceWarn"></div>
@@ -27,10 +27,7 @@
 <script src="../../common/skola.js"></script>
 <script>
 /* en = jak se zobrazí a vysloví (se členem), w = samotné slovo; v psaní platí se členem i bez */
-skolaVocab({
-  scoreKey: "dailyScore",
-  demo: "Where is my key?",
-  words: [
+const daily = [
     { cz: "platební karta", en: "a bank card", w: "bank card", alt: ["card", "debit card", "credit card"], e: "💳" },
     { cz: "kalendář", en: "a calendar", w: "calendar", alt: [], e: "📅" },
     { cz: "nabíječka", en: "a charger", w: "charger", alt: [], e: "🔌" },
@@ -48,8 +45,48 @@ skolaVocab({
     { cz: "časopis", en: "a magazine", w: "magazine", alt: [], e: "📰" },
     { cz: "rouška (maska)", en: "a mask", w: "mask", alt: ["masks", "face mask"], e: "😷" },
     { cz: "noviny", en: "a newspaper", w: "newspaper", alt: ["newspapers"], e: "🗞️" },
+    { cz: "taška", en: "a bag", w: "bag", alt: [], e: "👜" },
+    { cz: "deštník", en: "an umbrella", w: "umbrella", alt: [], e: "☂️" },
+    { cz: "počítač", en: "a computer", w: "computer", alt: ["pc"], e: "🖥️" },
+    { cz: "nůž", en: "a knife", w: "knife", alt: [], e: "🔪" },
+];
+const furniture = [
+    { cz: "lavice, psací stůl", en: "a desk", w: "desk", alt: [], e: "🧑‍💻" },
+    { cz: "stůl", en: "a table", w: "table", alt: [], e: "🍽️" },
+    { cz: "pohovka", en: "a sofa", w: "sofa", alt: ["couch"], e: "🛋️" },
+    { cz: "skříň, kredenc", en: "a cupboard", w: "cupboard", alt: ["wardrobe"], e: "🗄️" },
+];
+const clothes = [
+    { cz: "tričko", en: "a T-shirt", w: "T-shirt", alt: ["t shirt", "tshirt", "tee shirt"], e: "👕" },
+    { cz: "plavky", en: "a swimsuit", w: "swimsuit", alt: ["swimming costume", "bathing suit"], e: "👙" },
+    { cz: "šála", en: "a scarf", w: "scarf", alt: [], e: "🧣" },
+    { cz: "líčidla, make-up", en: "make-up", w: "make-up", alt: ["makeup", "make up"], e: "💄" },
+];
+const transport = [
+    { cz: "auto", en: "a car", w: "car", alt: [], e: "🚗" },
+    { cz: "letadlo", en: "an aeroplane", w: "aeroplane", alt: ["an airplane", "a plane"], e: "✈️" },
+    { cz: "autobus", en: "a bus", w: "bus", alt: [], e: "🚌" },
+    { cz: "vlak", en: "a train", w: "train", alt: [], e: "🚆" },
+];
+const toys = [
+    { cz: "míč", en: "a ball", w: "ball", alt: [], e: "⚽" },
+    { cz: "drak (papírový)", en: "a kite", w: "kite", alt: [], e: "🪁" },
+    { cz: "xylofon", en: "a xylophone", w: "xylophone", alt: [], e: "🎼" },
+    { cz: "dárek", en: "a present", w: "present", alt: ["a gift"], e: "🎁" },
+];
+skolaVocab({
+  scoreKey: "dailyScore",
+  demo: "Where is my key?",
+  words: [...daily, ...furniture, ...clothes, ...transport, ...toys],
+  groups: [
+    { title: "🎒 Věci denní potřeby", words: daily },
+    { title: "🛋️ Nábytek", words: furniture },
+    { title: "👕 Oblečení", words: clothes },
+    { title: "🚗 Doprava", words: transport },
+    { title: "🎁 Hračky a dárky", words: toys },
   ],
-  learnExtra: `<div class="box">💡 <b>a / an</b> = jeden, nějaký. <b>an</b> píšeme, když slovo začíná samohláskou: <b>an</b> identity card.<br>
+  learnExtra: `<div class="box">💡 <b>a / an</b> = jeden, nějaký. <b>an</b> píšeme, když slovo začíná samohláskou: <b>an</b> identity card, <b>an</b> umbrella, <b>an</b> aeroplane.<br>
+    <b>make-up</b> (líčidla) se nepočítá – proto bez <b>a</b>. Letadlo se britsky řekne <b>aeroplane</b>, americky <b>airplane</b>.<br>
     <b>glasses</b> (brýle), <b>headphones</b> a <b>earphones</b> (sluchátka) jsou v množném čísle – proto bez <b>a</b>.<br>
     🎧 <b>headphones</b> = velká sluchátka na hlavu, 👂 <b>earphones</b> = malá sluchátka do uší.</div>`,
 });

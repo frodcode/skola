@@ -26,32 +26,64 @@
 
 <script src="../../common/skola.js"></script>
 <script>
+const rubber = `<svg viewBox="0 0 64 40" width="1.3em" height="1em" style="vertical-align:-.12em"><rect x="2" y="6" width="60" height="28" rx="6" fill="#ff8fb1"/><rect x="36" y="6" width="26" height="28" rx="6" fill="#5b8def"/><rect x="36" y="6" width="8" height="28" fill="#5b8def"/></svg>`;
+const rooms = [
+  { cz: "učebna", en: "classroom", alt: ["class room"], e: "🧑‍🏫" },
+  { cz: "záchod", en: "toilet", alt: ["toilets", "wc", "loo"], e: "🚽" },
+  { cz: "knihovna", en: "library", alt: [], e: "📚" },
+  { cz: "sborovna", en: "teachers' room", alt: ["teachers room", "teacher's room", "teacher room", "staffroom", "staff room"], e: "☕" },
+  { cz: "počítačová učebna", en: "computer room", alt: ["computer lab", "ict room"], e: "💻" },
+  { cz: "jídelna", en: "canteen", alt: ["dining room", "school canteen", "dining hall"], e: "🍽️" },
+  { cz: "hudebna", en: "music room", alt: [], e: "🎹" },
+  { cz: "hřiště", en: "playground", alt: ["sports ground"], e: "⚽" },
+  { cz: "tělocvična", en: "gym", alt: ["gymnasium", "sports hall"], e: "🏀" },
+  { cz: "ředitelna", en: "head teacher's office", alt: ["headteacher's office", "head teacher office", "headteacher office", "principal's office"], e: "🗄️" },
+  { cz: "chodba", en: "corridor", alt: ["hall", "hallway"], e: "🚪" },
+  { cz: "šatna", en: "cloakroom", alt: ["changing room"], e: "🧥" },
+];
+const subjects = [
+  { cz: "tělocvik", en: "PE", say: "P. E.", alt: ["p.e.", "p e", "physical education"], e: "🤸" },
+  { cz: "chemie", en: "chemistry", alt: [], e: "🧪" },
+  { cz: "hudební výchova", en: "music", alt: [], e: "🎵" },
+  { cz: "výtvarná výchova", en: "art", alt: [], e: "🎨" },
+  { cz: "matematika", en: "maths", alt: ["math", "mathematics"], e: "➗" },
+  { cz: "zeměpis", en: "geography", alt: [], e: "🌍" },
+  { cz: "dějepis", en: "history", alt: [], e: "🏛️" },
+];
+const atSchool = [
+  { cz: "škola", en: "school", e: "🏫" },
+  { cz: "třída (žáci), hodina", en: "class", e: "🧑‍🤝‍🧑" },
+  { cz: "vyučovací hodina", en: "lesson", e: "🕘" },
+  { cz: "hodina angličtiny", en: "English class", alt: ["english lesson"], e: "💂" },
+  { cz: "univerzita", en: "university", e: "🎓" },
+  { cz: "rozvrh hodin", en: "timetable", alt: ["schedule"], e: "🗓️" },
+  { cz: "přestávka", en: "break", alt: ["breaktime", "break time"], e: "🔔" },
+  { cz: "konec hodiny", en: "the end of the lesson", alt: ["end of the lesson"], e: "🏁" },
+  { cz: "domácí úkol", en: "homework", e: "📝" },
+  { cz: "otázka", en: "question", e: "❓" },
+  { cz: "věta", en: "sentence", e: "📃" },
+];
+const things = [
+  { cz: "kniha", en: "book", e: "📕" },
+  { cz: "sešit, blok", en: "notebook", alt: ["exercise book"], e: "📓" },
+  { cz: "sešit na psaní (písanka)", en: "copybook", alt: ["copy book"], e: "📒" },
+  { cz: "tužka", en: "pencil", e: "✏️" },
+  { cz: "pero", en: "pen", e: "🖊️" },
+  { cz: "guma", en: "rubber", alt: ["eraser"], e: rubber },
+  { cz: "ořezávátko", en: "sharpener", alt: ["pencil sharpener"], e: "✏️🌀" },
+  { cz: "uniforma", en: "uniform", alt: ["school uniform"], e: "👔" },
+];
 skolaVocab({
   scoreKey: "schoolScore",
   demo: "Hello! Welcome to school.",
-  words: [
-    { cz: "učebna", en: "classroom", alt: ["class room"], e: "🧑‍🏫" },
-    { cz: "záchod", en: "toilet", alt: ["toilets", "wc", "loo"], e: "🚽" },
-    { cz: "knihovna", en: "library", alt: [], e: "📚" },
-    { cz: "tělocvik", en: "PE", say: "P. E.", alt: ["p.e.", "p e", "physical education"], e: "🤸" },
-    { cz: "sborovna", en: "teachers' room", alt: ["teachers room", "teacher's room", "teacher room", "staffroom", "staff room"], e: "☕" },
-    { cz: "chemie", en: "chemistry", alt: [], e: "🧪" },
-    { cz: "počítačová učebna", en: "computer room", alt: ["computer lab", "ict room"], e: "💻" },
-    { cz: "jídelna", en: "canteen", alt: ["dining room", "school canteen", "dining hall"], e: "🍽️" },
-    { cz: "hudební výchova", en: "music", alt: [], e: "🎵" },
-    { cz: "hudebna", en: "music room", alt: [], e: "🎹" },
-    { cz: "hřiště", en: "playground", alt: ["sports ground"], e: "⚽" },
-    { cz: "tělocvična", en: "gym", alt: ["gymnasium", "sports hall"], e: "🏀" },
-    { cz: "ředitelna", en: "head teacher's office", alt: ["headteacher's office", "head teacher office", "headteacher office", "principal's office"], e: "🗄️" },
-    { cz: "chodba", en: "corridor", alt: ["hall", "hallway"], e: "🚪" },
-    { cz: "šatna", en: "cloakroom", alt: ["changing room"], e: "🧥" },
-    { cz: "výtvarná výchova", en: "art", alt: [], e: "🎨" },
-    { cz: "matematika", en: "maths", alt: ["math", "mathematics"], e: "➗" },
-    { cz: "zeměpis", en: "geography", alt: [], e: "🌍" },
-    { cz: "dějepis", en: "history", alt: [], e: "🏛️" },
-    { cz: "rozvrh hodin", en: "timetable", alt: ["schedule"], e: "🗓️" },
-    { cz: "přestávka", en: "break", alt: ["breaktime", "break time"], e: "🔔" },
+  words: [...rooms, ...subjects, ...atSchool, ...things],
+  groups: [
+    { title: "🚪 Místnosti", words: rooms },
+    { title: "📚 Předměty", words: subjects },
+    { title: "🏫 Ve škole", words: atSchool },
+    { title: "✏️ Školní potřeby", words: things },
   ],
+  learnExtra: `<div class="box">💡 Guma se britsky řekne <b>rubber</b>, americky <b>eraser</b>.</div>`,
 });
 </script>
 </body>

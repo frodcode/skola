@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Zvířata – Animals 🐘</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🐘 Animals – Zvířata</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+skolaVocab({
+  scoreKey: "animalsScore",
+  demo: "I like elephants.",
+  words: [
+    { cz: "kůň", en: "horse", e: "🐴" },
+    { cz: "husa", en: "goose", e: "🪿" },
+    { cz: "slon", en: "elephant", e: "🐘" },
+    { cz: "kráva", en: "cow", e: "🐄" },
+    { cz: "kočka", en: "cat", e: "🐈" },
+    { cz: "pes", en: "dog", e: "🐕" },
+    { cz: "lev", en: "lion", e: "🦁" },
+    { cz: "pták", en: "bird", e: "🐦" },
+    { cz: "hnízdo", en: "nest", e: "🪺" },
+    { cz: "chobotnice", en: "octopus", e: "🐙" },
+    { cz: "aligátor", en: "alligator", e: "🐊" },
+    { cz: "mravenec", en: "ant", e: "🐜" },
+    { cz: "myš", en: "mouse", e: "🐭" },
+    { cz: "prase", en: "pig", e: "🐷" },
+    { cz: "ryba", en: "fish", e: "🐟" },
+  ],
+  learnExtra: `<div class="box">💡 Nepravidelné množné číslo: <b>goose → geese</b>, <b>mouse → mice</b>, <b>fish → fish</b>.<br>
+    Člen <b>an</b>: <b>an</b> elephant, <b>an</b> octopus, <b>an</b> alligator, <b>an</b> ant.</div>`,
+});
+</script>
+</body>
+</html>

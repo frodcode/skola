@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Vlastnosti a pocity – Feelings and adjectives 😊</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>😊 Feelings and adjectives – Vlastnosti a pocity</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const feelings = [
+  { cz: "šťastný, veselý", en: "happy", e: "😀" },
+  { cz: "smutný", en: "sad", e: "😢" },
+  { cz: "nadšený", en: "excited", e: "🤩" },
+  { cz: "znuděný", en: "bored", e: "🥱" },
+  { cz: "překvapený", en: "surprised", e: "😮" },
+  { cz: "hladový", en: "hungry", e: "🤤" },
+  { cz: "rád, potěšený", en: "glad", e: "😊" },
+  { cz: "nemocný", en: "ill", alt: ["sick"], e: "🤒" },
+];
+const people = [
+  { cz: "legrační", en: "funny", e: "😂" },
+  { cz: "hezký", en: "pretty", e: "🌸" },
+  { cz: "krásný", en: "beautiful", e: "🌹" },
+  { cz: "milý, pěkný", en: "nice", e: "👍" },
+  { cz: "laskavý", en: "kind", e: "🤗" },
+  { cz: "chytrý", en: "clever", alt: ["smart"], e: "🧠" },
+  { cz: "inteligentní", en: "intelligent", e: "🎓" },
+  { cz: "vážný", en: "serious", e: "😐" },
+  { cz: "čestný", en: "honest", e: "😇" },
+  { cz: "přátelský", en: "friendly", e: "👋" },
+  { cz: "silný", en: "strong", e: "💪" },
+  { cz: "vysoký", en: "tall", e: "🦒" },
+];
+const things = [
+  { cz: "velký", en: "big", e: "🐘" },
+  { cz: "malý", en: "small", alt: ["little"], e: "🐭" },
+  { cz: "starý", en: "old", e: "👵" },
+  { cz: "mladý", en: "young", e: "👶" },
+  { cz: "nový", en: "new", e: "✨" },
+  { cz: "rychlý", en: "fast", alt: ["quick"], e: "🏎️" },
+  { cz: "rychle", en: "quickly", e: "⚡" },
+  { cz: "dobrý", en: "good", e: "⭐" },
+  { cz: "zajímavý", en: "interesting", e: "🤔" },
+  { cz: "snadný", en: "easy", e: "👌" },
+  { cz: "slunečný", en: "sunny", e: "☀️" },
+  { cz: "dlouho, dlouhá doba", en: "long time", alt: ["a long time"], e: "⏳" },
+];
+skolaVocab({
+  scoreKey: "feelingsScore",
+  demo: "I am happy today.",
+  words: [...feelings, ...people, ...things],
+  groups: [
+    { title: "😊 Pocity", words: feelings },
+    { title: "🧑 Jaký je kdo", words: people },
+    { title: "📏 Jaké je co", words: things },
+  ],
+  learnExtra: `<div class="box">💡 Pocity říkáme se slovesem <b>být</b>: I <b>am</b> happy. She <b>is</b> sad. We <b>are</b> hungry.<br>
+    <b>fast</b> = rychlý (a fast car), <b>quickly</b> = rychle (run quickly).</div>`,
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Jídlo a pití – Food and drink 🍎</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🍎 Food and drink – Jídlo a pití</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const fruit = [
+  { cz: "jablko", en: "apple", e: "🍎" },
+  { cz: "pomeranč", en: "orange", e: "🍊" },
+  { cz: "broskev", en: "peach", e: "🍑" },
+  { cz: "meloun", en: "melon", e: "🍈" },
+  { cz: "hlávkový salát", en: "lettuce", e: "🥬" },
+];
+const meals = [
+  { cz: "jídlo", en: "food", e: "🍽️" },
+  { cz: "snídaně", en: "breakfast", e: "🥣" },
+  { cz: "oběd", en: "lunch", e: "🍝" },
+  { cz: "vejce", en: "egg", e: "🥚" },
+  { cz: "chléb", en: "bread", e: "🥖" },
+  { cz: "krajíc chleba", en: "slice of bread", alt: ["a slice of bread"], e: "🍞🤏" },
+  { cz: "bochník chleba", en: "loaf of bread", alt: ["a loaf of bread"], e: "🍞" },
+  { cz: "sýr", en: "cheese", e: "🧀" },
+  { cz: "kousek sýra", en: "piece of cheese", alt: ["a piece of cheese"], e: "🧀🤏" },
+  { cz: "rýžové pole", en: "rice field", alt: ["paddy field", "rice paddy"], e: "🌾" },
+];
+const sweets = [
+  { cz: "zmrzlina", en: "ice cream", alt: ["icecream", "ice-cream"], e: "🍨" },
+  { cz: "dort", en: "cake", e: "🎂" },
+  { cz: "sušenka", en: "cookie", alt: ["biscuit"], e: "🍪" },
+  { cz: "bonbon", en: "candy", alt: ["sweet"], e: "🍬" },
+  { cz: "bonbony", en: "candies", e: "🍬🍬" },
+  { cz: "sladkosti", en: "sweets", e: "🍭" },
+  { cz: "čokoláda", en: "chocolate", e: "🍫" },
+];
+const drinks = [
+  { cz: "sklenice vody", en: "glass of water", alt: ["a glass of water"], e: "🥛💧" },
+  { cz: "láhev", en: "bottle", e: "🍾" },
+  { cz: "balíček čaje", en: "packet of tea", alt: ["a packet of tea"], e: "📦🍵" },
+];
+skolaVocab({
+  scoreKey: "foodScore",
+  demo: "I like apples and ice cream.",
+  words: [...fruit, ...meals, ...sweets, ...drinks],
+  groups: [
+    { title: "🍎 Ovoce a zelenina", words: fruit },
+    { title: "🍽️ Jídlo", words: meals },
+    { title: "🍬 Sladkosti", words: sweets },
+    { title: "🥛 Pití", words: drinks },
+  ],
+  learnExtra: `<div class="box">💡 Kolik? <b>a slice of</b> bread (krajíc), <b>a loaf of</b> bread (bochník), <b>a piece of</b> cheese (kousek), <b>a glass of</b> water (sklenice), <b>a packet of</b> tea (balíček).<br>
+    🍪 <b>cookie</b> se v Británii říká také <b>biscuit</b>, 🍬 <b>candy</b> se v Británii řekne <b>sweets</b>.</div>`,
+});
+</script>
+</body>
+</html>

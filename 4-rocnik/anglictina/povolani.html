@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Povolání – Jobs 👩‍⚕️</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>👩‍⚕️ Jobs – Povolání</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+skolaVocab({
+  scoreKey: "jobsScore",
+  demo: "I am a teacher.",
+  words: [
+    { cz: "zdravotní sestra", en: "nurse", e: "👩‍⚕️" },
+    { cz: "učitel", en: "teacher", e: "🧑‍🏫" },
+    { cz: "lékař", en: "doctor", e: "🩺" },
+    { cz: "zubař", en: "dentist", e: "🦷" },
+    { cz: "pilot", en: "pilot", e: "🧑‍✈️" },
+    { cz: "tanečník", en: "dancer", e: "💃" },
+    { cz: "student", en: "student", e: "🧑‍🎓" },
+    { cz: "žák", en: "pupil", e: "🎒" },
+    { cz: "šampion, vítěz", en: "champion", e: "🏆" },
+    { cz: "basketbalista", en: "basketball player", e: "⛹️" },
+  ],
+  learnExtra: `<div class="box">💡 U povolání říkáme <b>a / an</b>: I am <b>a</b> teacher. She is <b>a</b> nurse. He is <b>a</b> pilot.</div>`,
+});
+</script>
+</body>
+</html>

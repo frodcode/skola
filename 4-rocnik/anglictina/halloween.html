@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Halloween 🎃</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🎃 Halloween</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+skolaVocab({
+  scoreKey: "halloweenScore",
+  demo: "Trick or treat! Happy Halloween!",
+  words: [
+    { cz: "Halloween (svátek 31. října)", en: "Halloween", e: "🦇" },
+    { cz: "kostým", en: "costume", e: "🦸" },
+    { cz: "čarodějnice", en: "witch", e: "🧙‍♀️" },
+    { cz: "duch", en: "ghost", e: "👻" },
+    { cz: "pirát", en: "pirate", e: "🏴‍☠️" },
+    { cz: "klaun", en: "clown", e: "🤡" },
+    { cz: "dýně", en: "pumpkin", e: "🎃" },
+    { cz: "vyřezávaná dýně se svíčkou", en: "Jack-o'-lantern", alt: ["jack-o-lantern", "jack o lantern", "jack o' lantern", "jack-o'lantern"], e: "🎃🕯️" },
+    { cz: "koledu, nebo vám něco provedu!", en: "trick or treat!", alt: ["trick-or-treat"], e: "🍬🚪" },
+    { cz: "koledování", en: "trick-or-treating", alt: ["trick or treating"], e: "🧒🍬" },
+    { cz: "strašidelný", en: "spooky", e: "🕸️" },
+    { cz: "děsivý", en: "scary", e: "😱" },
+    { cz: "noc", en: "night", e: "🌙" },
+  ],
+  learnExtra: `<div class="box">💡 <b>Halloween</b> se slaví 31. října. Děti chodí v kostýmech dům od domu (<b>trick-or-treating</b>) a volají <b>„Trick or treat!“</b>.</div>`,
+});
+</script>
+</body>
+</html>

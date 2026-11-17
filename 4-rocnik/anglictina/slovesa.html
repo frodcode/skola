@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Slovesa a činnosti – Verbs 🏃</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🏃 Verbs – Slovesa a činnosti</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const basic = [
+  { cz: "být", en: "be", alt: ["to be"], e: "🙋" },
+  { cz: "mít rád", en: "like", e: "👍" },
+  { cz: "milovat", en: "love", e: "❤️" },
+  { cz: "vidět", en: "see", e: "👀" },
+  { cz: "potřebovat", en: "need", e: "🙏" },
+  { cz: "cítit se", en: "feel", e: "💭" },
+  { cz: "dělat", en: "do", e: "🛠️" },
+  { cz: "dostat", en: "get", e: "📥" },
+  { cz: "dát", en: "give", e: "🎁" },
+  { cz: "přinést", en: "bring", e: "📦" },
+  { cz: "říct", en: "say", e: "💬" },
+  { cz: "mluvit", en: "speak", e: "🗣️" },
+  { cz: "stát se, dít se", en: "happen", e: "❗" },
+  { cz: "zapomenout", en: "forget", e: "🤷" },
+  { cz: "lhát", en: "lie", e: "🤥" },
+  { cz: "lže", en: "lies", e: "🤥💬" },
+];
+const daily = [
+  { cz: "jíst", en: "eat", e: "😋" },
+  { cz: "snědl", en: "ate", e: "🍽️✅" },
+  { cz: "spát", en: "sleep", e: "😴" },
+  { cz: "chodit, jít pěšky", en: "walk", e: "🚶" },
+  { cz: "hrát (si)", en: "play", e: "🎲" },
+  { cz: "číst", en: "read", e: "📖" },
+  { cz: "psát", en: "write", e: "✍️" },
+  { cz: "nosit (oblečení)", en: "wear", e: "👕" },
+  { cz: "obléct si, nasadit", en: "put on", e: "🧥" },
+  { cz: "připravit se", en: "get ready", e: "🎒" },
+  { cz: "odjet, odejít", en: "leave", e: "👋" },
+  { cz: "pospěš si!", en: "hurry!", alt: ["hurry up"], e: "🏃💨" },
+  { cz: "zavřít", en: "close", alt: ["shut"], e: "🔒" },
+  { cz: "cestovat", en: "travel", e: "✈️" },
+  { cz: "jezdit (na koni, kole)", en: "ride", e: "🚴" },
+];
+const school = [
+  { cz: "učit", en: "teach", e: "🧑‍🏫" },
+  { cz: "odpovědět", en: "answer", e: "🗨️" },
+  { cz: "doplnit", en: "complete", alt: ["fill in"], e: "✏️" },
+  { cz: "vybrat", en: "choose", e: "👆" },
+];
+const halloween = [
+  { cz: "převléknout se", en: "dress up", e: "🦸" },
+  { cz: "vyřezávat", en: "carve", e: "🔪" },
+  { cz: "klepat", en: "knock", e: "✊🚪" },
+  { cz: "pršet", en: "rain", e: "🌧️" },
+  { cz: "prší", en: "it's raining", alt: ["it is raining"], e: "☔" },
+];
+skolaVocab({
+  scoreKey: "verbsScore",
+  demo: "I like to play and read.",
+  words: [...basic, ...daily, ...school, ...halloween],
+  groups: [
+    { title: "⭐ Základní slovesa", words: basic },
+    { title: "🏃 Co dělám", words: daily },
+    { title: "🏫 Ve škole", words: school },
+    { title: "🎃 Halloween a počasí", words: halloween },
+  ],
+  learnExtra: `<div class="box">💡 <b>to be</b> (být): I <b>am</b>, he/she/it <b>is</b>, we/you/they <b>are</b>.<br>
+    Po <b>he / she / it</b> přidáváme <b>-s</b>: I lie → he <b>lies</b>. Minulý čas: eat → <b>ate</b> (snědl).</div>`,
+});
+</script>
+</body>
+</html>

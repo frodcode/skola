@@ -20,6 +20,10 @@
   .tile .emoji { font-size: 3.2rem; line-height: 1; }
   .tile .name { font-size: 1.35rem; font-weight: bold; }
   .tile .en { font-size: 1rem; color: #777; font-style: italic; }
+  h2.sec { margin: 22px 0 12px; color: #fff; font-size: 1.6rem; text-shadow: 2px 2px 0 #5b4bb7; }
+  .tile.vocab { position: relative; border: 3px solid #2e9e6b; color: #1f7a52; box-shadow: 0 6px 0 #2e9e6b, 0 8px 25px rgba(0,0,0,.15); }
+  .tile.vocab:active { box-shadow: 0 2px 0 #2e9e6b; }
+  .tile.vocab::after { content: "📖 slovníček"; position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 10px; background: #e3f6ec; color: #1f7a52; font-size: .75rem; font-weight: bold; }
   .home { display: inline-block; margin-bottom: 6px; color: #fff; text-decoration: none; font-size: .95rem; opacity: .85; }
   .home:hover { opacity: 1; text-decoration: underline; }
   footer { text-align: center; color: #fff; font-size: .9rem; padding-bottom: 20px; opacity: .85; }
@@ -39,12 +43,26 @@
   <div class="sub">Vyber si téma a procvičuj! ⭐</div>
 </header>
 <main>
+  <h2 class="sec">📖 Slovníčky</h2>
   <div class="tiles">
-    <a class="tile" href="skola-slovicka.html"><span class="emoji">🏫</span><span class="name">Škola – slovíčka</span><span class="en">At school</span></a>
+    <a class="tile vocab" href="lide-a-rodina.html"><span class="emoji">👨‍👩‍👧</span><span class="name">Lidé a rodina</span><span class="en">People and family</span></a>
+    <a class="tile vocab" href="povolani.html"><span class="emoji">👩‍⚕️</span><span class="name">Povolání</span><span class="en">Jobs</span></a>
+    <a class="tile vocab" href="zvirata.html"><span class="emoji">🐘</span><span class="name">Zvířata</span><span class="en">Animals</span></a>
+    <a class="tile vocab" href="jidlo-a-piti.html"><span class="emoji">🍎</span><span class="name">Jídlo a pití</span><span class="en">Food and drink</span></a>
+    <a class="tile vocab" href="mista-a-budovy.html"><span class="emoji">🏠</span><span class="name">Místa a budovy</span><span class="en">Places</span></a>
+    <a class="tile vocab" href="skola-slovicka.html"><span class="emoji">🏫</span><span class="name">Škola</span><span class="en">At school</span></a>
+    <a class="tile vocab" href="veci-denni-potreby.html"><span class="emoji">🎒</span><span class="name">Věci a předměty</span><span class="en">Things</span></a>
+    <a class="tile vocab" href="halloween.html"><span class="emoji">🎃</span><span class="name">Halloween</span><span class="en">Halloween</span></a>
+    <a class="tile vocab" href="vlastnosti-a-pocity.html"><span class="emoji">😊</span><span class="name">Vlastnosti a pocity</span><span class="en">Feelings and adjectives</span></a>
+    <a class="tile vocab" href="barvy.html"><span class="emoji">🎨</span><span class="name">Barvy</span><span class="en">Colours</span></a>
+    <a class="tile vocab" href="cas-a-frekvence.html"><span class="emoji">⏰</span><span class="name">Čas a frekvence</span><span class="en">Time</span></a>
+    <a class="tile vocab" href="slovesa.html"><span class="emoji">🏃</span><span class="name">Slovesa a činnosti</span><span class="en">Verbs</span></a>
+  </div>
+  <h2 class="sec">✏️ Gramatika a cvičení</h2>
+  <div class="tiles">
     <a class="tile" href="sloveso-byt.html"><span class="emoji">🙋</span><span class="name">Sloveso být</span><span class="en">to be</span></a>
     <a class="tile" href="abeceda.html"><span class="emoji">🔤</span><span class="name">Abeceda</span><span class="en">The alphabet</span></a>
-    <a class="tile" href="clen-a-an.html"><span class="emoji">🍎</span><span class="name">Členy a / an</span><span class="en">a car, an apple</span></a>
-    <a class="tile" href="veci-denni-potreby.html"><span class="emoji">🎒</span><span class="name">Věci denní potřeby</span><span class="en">Everyday things</span></a>
+    <a class="tile" href="clen-a-an.html"><span class="emoji">🅰️</span><span class="name">Členy a / an</span><span class="en">a car, an apple</span></a>
   </div>
 </main>
 <footer>Tip: v Chrome dej ⋮ → Přidat na plochu</footer>

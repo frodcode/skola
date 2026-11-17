@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Lidé a rodina – People and family 👨‍👩‍👧</title>
+<link rel="stylesheet" href="../../common/skola.css">
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>👨‍👩‍👧 People and family – Lidé a rodina</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+  <button data-mode="write">✏️ Psaní</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script>
+const family = [
+  { cz: "máma", en: "mum", alt: ["mom", "mummy", "mommy"], e: "👩" },
+  { cz: "matka", en: "mother", e: "🤱" },
+  { cz: "táta", en: "dad", alt: ["daddy"], e: "👨‍🍼" },
+  { cz: "otec", en: "father", e: "🧔" },
+  { cz: "rodiče", en: "parents", e: "👫" },
+  { cz: "bratr", en: "brother", e: "🙋‍♂️" },
+  { cz: "sestra", en: "sister", e: "🙋‍♀️" },
+  { cz: "strýc", en: "uncle", e: "👨‍🦰" },
+  { cz: "dědeček", en: "grandpa", alt: ["grandad", "granddad", "grandfather"], e: "👴" },
+  { cz: "vnoučata", en: "grandchildren", alt: ["grand children"], e: "👶👧" },
+  { cz: "bratranec / sestřenice", en: "cousin", e: "🧑‍🤝‍🧑" },
+  { cz: "manželka", en: "wife", e: "👰" },
+  { cz: "manželky", en: "wives", e: "👰👰" },
+  { cz: "rodina", en: "family", e: "👨‍👩‍👧‍👦" },
+];
+const people = [
+  { cz: "muž", en: "man", e: "👨" },
+  { cz: "starý muž", en: "old man", e: "🧓" },
+  { cz: "muži", en: "men", e: "👨👨" },
+  { cz: "chlapec", en: "boy", e: "👦" },
+  { cz: "dívka", en: "girl", e: "👧" },
+  { cz: "dítě", en: "child", e: "👶" },
+  { cz: "děti", en: "children", e: "👧👦" },
+  { cz: "děcko", en: "kid", e: "🧒" },
+  { cz: "děcka", en: "kids", e: "🧒🧒" },
+  { cz: "žena v domácnosti", en: "housewife", alt: ["house wife"], e: "🧹" },
+];
+const friends = [
+  { cz: "kamarád, přítel", en: "friend", e: "🤝" },
+  { cz: "nejlepší kamarád", en: "best friend", e: "💛" },
+  { cz: "spolužák", en: "classmate", alt: ["class mate"], e: "🧑‍🎓" },
+];
+skolaVocab({
+  scoreKey: "familyScore",
+  demo: "This is my family.",
+  words: [...family, ...people, ...friends],
+  groups: [
+    { title: "👨‍👩‍👧 Rodina", words: family },
+    { title: "🧑 Lidé", words: people },
+    { title: "🤝 Kamarádi", words: friends },
+  ],
+  learnExtra: `<div class="box">💡 Nepravidelné množné číslo: <b>man → men</b>, <b>child → children</b>, <b>wife → wives</b>.<br>
+    <b>kid</b> je hovorově „děcko“, <b>child</b> je „dítě“.</div>`,
+});
+</script>
+</body>
+</html>
