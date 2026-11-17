@@ -65,7 +65,10 @@
   .card:hover { border-color: #5b4bb7; }
   .card .emoji { font-size: 2rem; }
   .card .en { font-weight: bold; font-size: 1.1rem; color: #3a2d99; }
-  .card .cz { color: #555; }
+  .card .cz { color: #555; border-radius: 8px; }
+  .card .cz:hover { background: #e4ddff; }
+  .card .ico { font-size: .8em; opacity: .55; }
+  .big { cursor: pointer; }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .tile { padding: 14px; margin-bottom: 8px; border-radius: 12px; background: #f3f0ff; text-align: center; cursor: pointer; font-size: 1.1rem; border: 3px solid transparent; transition: .15s; }
   .tile.sel { border-color: #5b4bb7; background: #ddd6ff; }
@@ -119,7 +122,7 @@ scoreEl.textContent = score;
 
 function addScore(n) { score += n; localStorage.setItem("dailyScore", score); scoreEl.textContent = score; }
 function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-let voices = [], voice = null;
+let voices = [], voice = null, csVoice = null;
 const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
 function voiceRank(v) {
   const l = v.lang.replace("_", "-").toLowerCase(), n = v.name.toLowerCase();
@@ -132,11 +135,15 @@ function voiceRank(v) {
 }
 function loadVoices() {
   if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
-  voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  const all = speechSynthesis.getVoices();
+  voices = all.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  csVoice = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => (/natural|online|neural/i.test(b.name) ? 1 : 0) - (/natural|online|neural/i.test(a.name) ? 1 : 0))[0] || null;
   const hasGB = voices.some(v => voiceRank(v) >= 100);
-  voiceWarn.innerHTML = hasGB ? "" :
+  voiceWarn.innerHTML = (hasGB ? "" :
     "⚠️ Britský hlas nenalezen. Otevřete stránku v <b>Microsoft Edge</b> (hlasy Sonia/Ryan) nebo v <b>Chrome</b> (Google UK English), " +
-    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.";
+    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.") +
+    (csVoice || !all.length ? "" : (hasGB ? "" : "<br>") +
+    "⚠️ Český hlas nenalezen, česká slovíčka se nebudou předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>.");
   if (!voices.length) { voiceSel.innerHTML = "<option>žádný anglický hlas</option>"; return; }
   const saved = localStorage.getItem("schoolVoice");
   voice = voices.find(v => v.name === saved) || voices[0];
@@ -153,6 +160,13 @@ function speak(text) {
   const u = new SpeechSynthesisUtterance(w && w.say ? w.say : text);
   if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
   u.rate = 0.85;
+  speechSynthesis.speak(u);
+}
+function speakCz(text) {
+  if (!("speechSynthesis" in window) || !csVoice) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = csVoice; u.lang = csVoice.lang; u.rate = 0.9;
   speechSynthesis.speak(u);
 }
 function norm(s) { return s.toLowerCase().replace(/[’`]/g, "'").replace(/[.!]/g, "").replace(/\s+/g, " ").trim(); }
@@ -172,12 +186,16 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 /* 📖 Learn */
 function learn() {
   app.innerHTML = `<h2>📖 Slovíčka – klikni a poslechni si výslovnost</h2><div class="grid">${
-    WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en}</div><div class="cz">${w.cz}</div></div>`).join("")
+    WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz} <span class="ico">🔊</span></div></div>`).join("")
   }</div>
   <div class="box">💡 <b>a / an</b> = jeden, nějaký. <b>an</b> píšeme, když slovo začíná samohláskou: <b>an</b> identity card.<br>
     <b>glasses</b> (brýle), <b>headphones</b> a <b>earphones</b> (sluchátka) jsou v množném čísle – proto bez <b>a</b>.<br>
     🎧 <b>headphones</b> = velká sluchátka na hlavu, 👂 <b>earphones</b> = malá sluchátka do uší.</div>`;
-  app.querySelectorAll(".card").forEach(c => c.onclick = () => speak(WORDS[c.dataset.i].en));
+  app.querySelectorAll(".card").forEach(c => {
+    const w = WORDS[c.dataset.i];
+    c.onclick = () => speak(w.en);
+    c.querySelector(".cz").onclick = e => { e.stopPropagation(); speakCz(w.cz); };
+  });
 }
 
 /* 🔗 Match */
@@ -201,6 +219,7 @@ function match() {
   function pick(t) {
     if (t.classList.contains("done")) return;
     if (t.dataset.side === "en") speak(t.dataset.key);
+    else speakCz(WORDS.find(x => x.en === t.dataset.key).cz);
     if (!selected || selected.dataset.side === t.dataset.side) {
       if (selected) selected.classList.remove("sel");
       selected = t; t.classList.add("sel"); return;
@@ -231,12 +250,13 @@ function quiz() {
     const opts = shuffle([w, ...shuffle(WORDS.filter(x => x !== w)).slice(0, 3)]);
     app.innerHTML = `<h2>❓ Kvíz (${i + 1}/${order.length})</h2>
       <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
-      <div class="big">${w.e} ${toEn ? w.cz : w.en} ${toEn ? "" : "🔊"}</div>
+      <div class="big">${w.e} ${toEn ? w.cz : w.en} 🔊</div>
       <p class="center">${toEn ? "Jak se to řekne anglicky?" : "Co to znamená česky?"}</p>
       <div class="options">${opts.map(o => `<button data-k="${o.en}">${toEn ? o.en : o.cz}</button>`).join("")}</div>
       <div class="feedback" id="fb"></div>`;
-    if (!toEn) speak(w.en);
-    app.querySelector(".big").onclick = () => speak(w.en);
+    const sayPrompt = () => toEn ? speakCz(w.cz) : speak(w.en);
+    sayPrompt();
+    app.querySelector(".big").onclick = sayPrompt;
     app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
       app.querySelectorAll(".options button").forEach(x => { x.disabled = true; if (x.dataset.k === w.en) x.classList.add("ok"); });
       const fb = app.querySelector("#fb");
@@ -258,7 +278,7 @@ function write() {
     const w = order[i]; tries = 0; hintLen = 0;
     app.innerHTML = `<h2>✏️ Napiš anglicky (${i + 1}/${order.length})</h2>
       <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
-      <div class="big">${w.e} ${w.cz}</div>
+      <div class="big">${w.e} ${w.cz} 🔊</div>
       <div class="hint" id="hint"></div>
       <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sem napiš slovíčko">
       <div class="center">
@@ -270,6 +290,8 @@ function write() {
       <div class="feedback" id="fb"></div>`;
     const inp = app.querySelector("#inp"), fb = app.querySelector("#fb"), hint = app.querySelector("#hint");
     inp.focus();
+    speakCz(w.cz);
+    app.querySelector(".big").onclick = () => { speakCz(w.cz); inp.focus(); };
     const renderHint = () => hint.textContent = [...w.en].map((c, k) => c === " " ? " " : (k < hintLen ? c : "_")).join("");
     renderHint();
     const next = () => setTimeout(() => { i++; show(); }, 1700);

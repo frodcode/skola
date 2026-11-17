@@ -65,7 +65,10 @@
   .card:hover { border-color: #5b4bb7; }
   .card .emoji { font-size: 2rem; }
   .card .ph { font-weight: bold; font-size: 1.1rem; color: #3a2d99; }
-  .card .cz { font-size: 1rem; font-style: normal; margin: 0; color: #555; }
+  .card .cz { font-size: 1rem; font-style: normal; margin: 0; color: #555; border-radius: 8px; }
+  .card .cz:hover { background: #e4ddff; }
+  .ico { font-size: .8em; opacity: .55; font-style: normal; }
+  .say-cz { cursor: pointer; }
   .card .n { color: #c0392b; font-size: .85rem; }
   .art { color: #c0392b; }
   .cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -151,7 +154,7 @@ scoreEl.textContent = score;
 
 function addScore(n) { score += n; localStorage.setItem("articleScore", score); scoreEl.textContent = score; }
 function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-let voices = [], voice = null;
+let voices = [], voice = null, csVoice = null;
 const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
 function voiceRank(v) {
   const l = v.lang.replace("_", "-").toLowerCase(), n = v.name.toLowerCase();
@@ -164,11 +167,15 @@ function voiceRank(v) {
 }
 function loadVoices() {
   if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
-  voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  const all = speechSynthesis.getVoices();
+  voices = all.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  csVoice = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => (/natural|online|neural/i.test(b.name) ? 1 : 0) - (/natural|online|neural/i.test(a.name) ? 1 : 0))[0] || null;
   const hasGB = voices.some(v => voiceRank(v) >= 100);
-  voiceWarn.innerHTML = hasGB ? "" :
+  voiceWarn.innerHTML = (hasGB ? "" :
     "⚠️ Britský hlas nenalezen. Otevřete stránku v <b>Microsoft Edge</b> (hlasy Sonia/Ryan) nebo v <b>Chrome</b> (Google UK English), " +
-    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.";
+    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.") +
+    (csVoice || !all.length ? "" : (hasGB ? "" : "<br>") +
+    "⚠️ Český hlas nenalezen, česká slovíčka se nebudou předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>.");
   if (!voices.length) { voiceSel.innerHTML = "<option>žádný anglický hlas</option>"; return; }
   const saved = localStorage.getItem("schoolVoice");
   voice = voices.find(v => v.name === saved) || voices[0];
@@ -186,6 +193,13 @@ function speak(text) {
   u.rate = 0.85;
   speechSynthesis.speak(u);
 }
+function speakCz(text) {
+  if (!("speechSynthesis" in window) || !csVoice) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = csVoice; u.lang = csVoice.lang; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
 function norm(s) { return s.toLowerCase().replace(/[’`]/g, "'").replace(/[.!]/g, "").replace(/\s+/g, " ").trim(); }
 
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
@@ -196,7 +210,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 
 /* 📖 Learn */
 function cardsFor(list) {
-  return `<div class="grid">${list.map(x => `<div class="card" data-i="${ITEMS.indexOf(x)}"><div class="emoji">${x.e}</div><div class="ph"><span class="art">${x.a}</span> ${x.w}</div><div class="cz">${x.cz}</div>${x.n ? `<div class="n">${x.n}</div>` : ""}</div>`).join("")}</div>`;
+  return `<div class="grid">${list.map(x => `<div class="card" data-i="${ITEMS.indexOf(x)}"><div class="emoji">${x.e}</div><div class="ph"><span class="art">${x.a}</span> ${x.w}</div><div class="cz">${x.cz} <span class="ico">🔊</span></div>${x.n ? `<div class="n">${x.n}</div>` : ""}</div>`).join("")}</div>`;
 }
 function learn() {
   app.innerHTML = `<h2>📖 Neurčitý člen <i>a / an</i></h2>
@@ -212,7 +226,11 @@ function learn() {
     <h3>an 🍎</h3>${cardsFor(ITEMS.filter(x => x.a === "an"))}
     <h3>a 🐶</h3>${cardsFor(ITEMS.filter(x => x.a === "a"))}
     <h3>bez členu 👓</h3>${cardsFor(ITEMS.filter(x => !x.a))}`;
-  app.querySelectorAll(".card").forEach(c => c.onclick = () => speak(phrase(ITEMS[c.dataset.i])));
+  app.querySelectorAll(".card").forEach(c => {
+    const x = ITEMS[c.dataset.i];
+    c.onclick = () => speak(phrase(x));
+    c.querySelector(".cz").onclick = e => { e.stopPropagation(); speakCz(x.cz); };
+  });
 }
 
 /* ❓ Quiz */
@@ -226,9 +244,10 @@ function quiz() {
       <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
       <div class="big">${x.e}</div>
       <div class="sent"><span class="gap">?</span> ${x.w}</div>
-      <p class="cz">${x.cz}</p>
+      <p class="cz say-cz">${x.cz} <span class="ico">🔊</span></p>
       <div class="options three">${["a", "an", ""].map(a => `<button data-a="${a}">${artLabel(a)}</button>`).join("")}</div>
       <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    app.querySelector(".say-cz").onclick = () => speakCz(x.cz);
     app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
       app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.a === x.a) y.classList.add("ok"); });
       const fb = app.querySelector("#fb");
@@ -296,7 +315,7 @@ function write() {
     const ans = phrase(x);
     app.innerHTML = `<h2>✏️ Napiš anglicky i se členem (${i + 1}/${order.length})</h2>
       <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
-      <div class="big">${x.e} ${x.cz}</div>
+      <div class="big say-cz">${x.e} ${x.cz} 🔊</div>
       <div class="hint" id="hint"></div>
       <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="např. an apple">
       <div class="center">
@@ -308,6 +327,8 @@ function write() {
       <div class="feedback" id="fb"></div>`;
     const inp = app.querySelector("#inp"), fb = app.querySelector("#fb"), hint = app.querySelector("#hint");
     inp.focus();
+    speakCz(x.cz);
+    app.querySelector(".say-cz").onclick = () => { speakCz(x.cz); inp.focus(); };
     const renderHint = () => hint.textContent = [...ans].map((c, k) => c === " " ? " " : (k < hintLen ? c : "_")).join("");
     renderHint();
     const next = () => setTimeout(() => { i++; show(); }, 1900);
