@@ -107,7 +107,7 @@ function steps() {
       const inp = app.querySelector("#inp"), fb = app.querySelector("#fb");
       app.querySelector("#q").onclick = () => speakCz(czMath(x.q + " = ?"));
       app.querySelector("#st").onclick = () => speakCz(st.say);
-      speakCz(k ? st.say : czMath(x.q + " = ?") + ". " + st.say);
+      speakCz(k ? st.say : czMath(x.q + " = ?") + " " + st.say);
       inp.focus();
       const check = () => {
         if (!inp.value.trim() || inp.disabled) return;

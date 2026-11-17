@@ -66,7 +66,7 @@ Globální proměnné nikdy znovu nedeklaruj přes let/const: `app`, `SKOLA`, `s
 | `skolaStart({ scoreKey, modes, demo, rate=0.85, czRate=0.9, czech=true, english=true })` | Načte body a hlasy, napojí `<nav>` a spustí režim s class `active`. `czech:false` vypne varování o chybějícím českém hlasu. `english:false` je pro stránky jen v češtině (viz níže). |
 | `skolaVocab({ ...skolaStart, words, groups?, learnExtra, modes? })` | Kompletní stránka slovíček s režimy learn / listen / match / quiz / write (zobrazí se ty, které mají tlačítko v `<nav>`). |
 | `speak(text, rate?)` | Přečte text britsky; použije `SKOLA.say[text]`, pokud je definováno. |
-| `speakCz(text, rate?)` | Přečte text česky (výchozí `czRate`; diktát a věty pomaleji, 0.7–0.8). |
+| `speakCz(text, rate?)` | Přečte text česky (výchozí `czRate`; diktát a věty pomaleji, 0.7–0.8). Respektuje přepínač Automaticky předčítat; `czSpeakNow` ho obchází (jen pro Ukázku hlasu). |
 | `speakSeqCz(items, pause=350, rate?)` | Přečte české položky postupně (řady vyjmenovaných slov, hlásky). |
 | `speakBoth(en, cz)` | Přečte anglicky, pak česky. |
 | `speakSeq(items, pause=350, rate?)` | Přečte položky postupně s pauzou. |
@@ -101,7 +101,11 @@ skolaStart({ scoreKey: "mUniqueScore", english: false, modes: { learn, … } });
 </script>
 ```
 
-Bez výběru hlasu (`<select>`); `english:false` skryje anglický hlas i varování o britském hlasu a demo je česky. Prefix `scoreKey`: `cj…` pro češtinu, `m…` pro matematiku.
+Bez výběru hlasu (`<select>`); `english:false` skryje anglický hlas i varování o britském hlasu. `skola.js` místo nich vloží do hlavičky lištu `#czBar`:
+- **Výběr českého hlasu** + ▶️ Ukázka (`SKOLA.demo` jako text, jinak ukázkový příklad). Volba v `localStorage.schoolVoiceCz`. Řazení `csRank`: Natural/Online/Neural > Google > ostatní (Windows SAPI „Jakub“). Bez přirozeného hlasu se ukáže tip „otevři v Microsoft Edge“ (Antonín, Vlasta). `czRate` se nastaví podle hlasu (neurální 1.0, jinak 0.9), pokud ho stránka nezadá sama.
+- **☑️ 🔊 Automaticky předčítat** (`SKOLA.autoRead`, sdíleně v `localStorage.schoolAutoReadCz`, výchozí zapnuto). Vypnuto: `speakCz`/`speakSeqCz` zazní jen během kliknutí na prvek `.clk`, `[data-say]`, `.sp`, `.chip`, `.w`, `#listen` nebo na tlačítko s 🔊/🐢 v textu – a jen jednou za kliknutí (klik na slovo-odpověď přečte slovo, ale ne následnou zpětnou vazbu). Nové zadání, zpětná vazba, časovače a výsledky mlčí. Tlačítka, která mají předčítat, proto označ 🔊/🐢 nebo jednou z těchto tříd; odpovědní tlačítka 🔊 mít nesmí. Diktát (`cvicAsk` s `listen:true`) při vypnutí zvýrazní 🔊 Poslechnout. Anglické stránky přepínač ignorují.
+
+Prefix `scoreKey`: `cj…` pro češtinu, `m…` pro matematiku.
 
 ### API z `cvic.js`
 
@@ -109,7 +113,7 @@ Bez výběru hlasu (`<select>`); `english:false` skryje anglický hlas i varová
 |---|---|
 | `cvicHead(title, i, n)` | Klikací nadpis s počítadlem `(i+1/n)` a progress bar. |
 | `czSay(text, say?)`, `czBind(root=app)` | Klikací český text s 🔊; `czBind` napojí všechna `[data-say]` na `speakCz`. |
-| `czClean(s)`, `czMath(s)` | Text bez HTML/emoji k předčítání; příklad ke čtení (`13 − 5 = ?` → „13 mínus 5 rovná se kolik“). |
+| `czClean(s)`, `czMath(s)`, `czExpr(s)`, `czRead(s)` | Přirozené čtení: `czClean` text bez HTML/emoji („ / “ → „nebo“); `czMath` příklad jako větu (`13 − 5 = ?` → „Kolik je 13 mínus 5?“, `34 + ? = 40` → „34 plus kolik je 40?“, `13 − 5 = 8` → „13 mínus 5 je 8.“); `czExpr` výraz se závorkami („20 plus 30 v závorce, mínus 10“); `czRead` výrazy uvnitř běžného textu („8 + 6 = 14, píšu 4“ → „8 plus 6 je 14, píšu 4“). Nepiš „rovná se“ ani „(pokus 1/3)“ do předčítaného textu. |
 | `cvicRound(items, again, render(x, i, n, done))` | Kolo s opakováním chyb na konci a `finish`. Základ vlastních režimů. |
 | `cvicAsk(o)` | Psaná odpověď: 3 pokusy, Nápověda / Poslechnout / Nevím, volitelná klávesnice (`numeric`, `keys(x)`). |
 | `cvicNumbers({ title, gen, count=10, again, help? })` | Číselné příklady; `gen()` → `{ q: "34 + 5", a: 39, say?, help? }`. |
@@ -139,7 +143,8 @@ Obsah:
 ## Ověření
 
 Otevři stránku v browser canvasu (`file:///C:/Users/frant/Documents/github-copilot/skola/...`). Přes `evaluate_javascript`:
-1. Počkej asi 800 ms, pak obal `speechSynthesis.speak` logováním (`u.lang`, `u.text`). Nevolej `u.onend`, jinak vznikne smyčka.
+1. Počkej asi 800 ms, pak obal `speechSynthesis.speak` logováním (`u.voice.name`, `u.rate`, `u.text`) a zachytáváním chyb (`window.onerror`). Nevolej `u.onend`, jinak vznikne smyčka. U češtiny zkontroluj, že text zní jako přirozená věta.
+   U stránek v češtině ověř i vypnuté „Automaticky předčítat“: přepnutí režimu a odpověď nic nepřehrají, klik na 🔊 ano.
 2. Zkontroluj, že `#app` není prázdný. Pokud je prázdný, skript stránky má syntaktickou chybu (`new Function(document.scripts[1].text)` ji ukáže).
 3. Klikni na každé tlačítko v `<nav>` a v každém režimu proveď jednu akci.
 4. Udělej screenshot režimu Učím se.

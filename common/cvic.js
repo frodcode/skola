@@ -3,11 +3,26 @@
    Všechny režimy kreslí do #app, ukazují průběh a na konci volají finish(). */
 
 /* text bez emoji a HTML – k předčítání nadpisů a zadání */
-function czClean(s) { return String(s).replace(/<[^>]*>/g, " ").replace(/[^\p{L}\p{N}\s.,:;?!()+−=–-]/gu, "").replace(/\s+/g, " ").trim(); }
-/* příklad k předčítání: "13 − 5 = ?" → "13 mínus 5 rovná se kolik" */
+function czClean(s) { return String(s).replace(/<[^>]*>/g, " ").replace(/\s\/\s/g, " nebo ").replace(/[^\p{L}\p{N}\s.,:;?!()+−=–-]/gu, "").replace(/\s+/g, " ").trim(); }
+/* výraz slovy: "20 + (5 − 3)" → "20 plus, v závorce 5 mínus 3"; "?" / "_" → "kolik" */
+function czExpr(s) {
+  const t = String(s).trim().replace(/^\(([^()]*)\)/, "$1 v závorce, ").replace(/\(([^()]*)\)/g, ", v závorce $1");
+  return t.replace(/<[^>]*>/g, " ").replace(/\+/g, " plus ").replace(/[−-]/g, " mínus ").replace(/·|×/g, " krát ")
+    .replace(/:/g, " děleno ").replace(/\?|_+/g, " kolik ").replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ").replace(/^, |,\s*$/g, "").trim();
+}
+/* příklad k předčítání jako přirozená věta:
+   "13 − 5 = ?" → "Kolik je 13 mínus 5?", "34 + ? = 40" → "34 plus kolik je 40?", "13 − 5 = 8" → "13 mínus 5 je 8." */
 function czMath(s) {
-  return String(s).replace(/\+/g, " plus ").replace(/[−-]/g, " mínus ").replace(/·|×/g, " krát ").replace(/:/g, " děleno ")
-    .replace(/=/g, " rovná se ").replace(/\?|_+/g, " kolik ").replace(/\(/g, " závorka ").replace(/\)/g, " ").replace(/\s+/g, " ").trim();
+  const [l, r] = String(s).replace(/<[^>]*>/g, " ").split("=");
+  if (r === undefined) return czExpr(l);
+  const L = czExpr(l), R = czExpr(r);
+  if (R === "kolik" || R === "") return `Kolik je ${L}?`;
+  if (/\?|_/.test(s)) return `${L} je ${R}?`;
+  return `${L} je ${R}.`;
+}
+/* text s příklady uvnitř věty („8 + 6 = 14, píšu 4“): symboly slovy, „=“ jako „je“ */
+function czRead(s) {
+  return czClean(String(s)).replace(/\s*\+\s*/g, " plus ").replace(/\s+[−-]\s+/g, " mínus ").replace(/\s*=\s*/g, " je ").replace(/\s+/g, " ").trim();
 }
 /* nadpis s počítadlem a progress bar; nadpis je klikací (přečte se česky) */
 function cvicHead(title, i, n) {
@@ -43,15 +58,16 @@ function cvicAsk(o) {
     let tries = 0, hints = 0;
     const ans = String(o.answer(x));
     const keys = o.numeric ? ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"] : o.keys ? o.keys(x) : null;
+    const quiet = SKOLA.autoRead === false;
     app.innerHTML = `${cvicHead(o.title, i, n)}
-      <div class="task clk" id="q">${o.prompt(x)} <span class="ico">🔊</span></div>
+      <div class="task clk" id="q">${o.prompt(x)} <span class="ico">🔊</span>${quiet && o.listen ? `<div class="note">Klikni na 🔊 Poslechnout</div>` : ""}</div>
       <div class="hint" id="hint"></div>
       <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" ${o.numeric ? 'inputmode="numeric" class="num"' : ""} placeholder="${o.placeholder || ""}">
       ${keys ? `<div class="pad${o.numeric ? " num" : ""}">${keys.map(k => `<button data-k="${k}">${k}</button>`).join("")}<button data-k="⌫" class="del">⌫</button></div>` : ""}
       <div class="center">
         <button class="btn" id="check">✔️ Zkontrolovat</button>
         <button class="btn light" id="hintBtn">💡 Nápověda</button>
-        <button class="btn light" id="listen">🔊 Poslechnout</button>
+        <button class="btn${quiet ? "" : " light"}" id="listen">🔊 Poslechnout</button>
         <button class="btn light" id="skip">⏭️ Nevím</button>
       </div>
       <div class="feedback" id="fb"></div>`;
@@ -177,7 +193,7 @@ function cvicSprint(o) {
    items: [{ w: "hřeben", say?: "…", e?: "🖼️", help?: "HTML" }] */
 function cvicDictation(o) {
   cvicAsk({
-    title: o.title, items: o.items, again: o.again, placeholder: "napiš, co slyšíš",
+    title: o.title, items: o.items, again: o.again, placeholder: "napiš, co slyšíš", listen: true,
     prompt: x => o.showPic && x.e ? `<span class="pic">${x.e}</span>` : "👂 Poslouchej",
     say: x => speakCz(x.say || x.w, 0.75),
     answer: x => x.w,

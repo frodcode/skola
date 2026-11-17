@@ -85,7 +85,7 @@ function learn() {
       🧱 <b>Neohebné</b> (tvar se nemění): 6 – 10 <span class="ico">🔊</span></div>
     <table class="t">${DRUHY.map(d => `<tr${d.n === 6 ? ' style="border-top:3px solid #5b4bb7"' : ""}>
       <td><span class="num">${d.n}</span></td>
-      <td>${czSay(`<b>${d.name}</b>`, `${d.n}. ${d.name}. ${d.q}. ${d.d}.`)}<div class="note">${d.q} – ${d.d}</div></td>
+      <td>${czSay(`<b>${d.name}</b>`, `${d.n}. ${d.name}. ${d.q}${/\?$/.test(d.q) ? "" : "."} ${d.d}.`)}<div class="note">${d.q} – ${d.d}</div></td>
       <td>${d.ex.map(w => czSay(w)).join("")}</td></tr>`).join("")}</table>`;
   czBind();
 }

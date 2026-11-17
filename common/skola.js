@@ -22,15 +22,52 @@ function voiceRank(v) {
   if (/sonia|ryan|libby|hazel|george|susan|daniel|kate|serena/.test(n)) r += 5;
   return r;
 }
+/* český hlas: neurální (Edge: Antonín, Vlasta Online Natural) > Google > ostatní (Windows SAPI Jakub) */
+function csRank(v) {
+  const n = v.name.toLowerCase();
+  return (/natural|online|neural/.test(n) ? 20 : 0) + (/google/.test(n) ? 10 : 0);
+}
+/* rychlost češtiny podle hlasu (neurální hlasy mluví přirozeně i v 1.0), jen když ji stránka nenastavila */
+function setCzRate() {
+  if (!SKOLA.czRateFixed) SKOLA.czRate = csVoice && csRank(csVoice) >= 20 ? 1 : 0.9;
+}
+/* lišta v hlavičce stránek jen v češtině: výběr českého hlasu + Ukázka + přepínač Automaticky předčítat */
+function czBar() {
+  if (document.getElementById("czBar")) return;
+  SKOLA.autoRead = localStorage.getItem("schoolAutoReadCz") !== "0";
+  document.getElementById("voiceWarn").insertAdjacentHTML("beforebegin", `<div class="voice" id="czBar">
+    <span id="voiceCz" style="display:none">🔊 Hlas: <select id="voiceSelCz"></select> <button type="button" id="voiceDemo">▶️ Ukázka</button></span>
+    <label class="autoread"><input type="checkbox" id="autoRead" ${SKOLA.autoRead ? "checked" : ""}> 🔊 Automaticky předčítat</label></div>`);
+  const sel = document.getElementById("voiceSelCz");
+  const demo = () => czSpeakNow(typeof SKOLA.demo === "string" ? SKOLA.demo : "Ahoj! Kolik je 8 plus 5? 8 plus 5 je 13.");
+  sel.onchange = () => { csVoice = SKOLA.csVoices.find(v => v.name === sel.value) || csVoice; localStorage.setItem("schoolVoiceCz", csVoice.name); setCzRate(); demo(); };
+  document.getElementById("voiceDemo").onclick = demo;
+  document.getElementById("autoRead").onchange = e => {
+    SKOLA.autoRead = e.target.checked;
+    localStorage.setItem("schoolAutoReadCz", SKOLA.autoRead ? "1" : "0");
+    if (!SKOLA.autoRead) stopSpeech();
+    document.querySelectorAll("#listen").forEach(b => b.className = SKOLA.autoRead ? "btn light" : "btn");
+  };
+}
+function czVoiceUi(cs) {
+  const sel = document.getElementById("voiceSelCz");
+  document.getElementById("voiceCz").style.display = cs.length ? "" : "none";
+  sel.innerHTML = cs.map(v => `<option value="${v.name}">${v.name.replace(/^Microsoft /, "").replace(/ - .*$/, "")}</option>`).join("");
+  if (csVoice) sel.value = csVoice.name;
+}
 function loadVoices() {
   const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
   if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
   const all = speechSynthesis.getVoices();
   voices = all.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
-  csVoice = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => (/natural|online|neural/i.test(b.name) ? 1 : 0) - (/natural|online|neural/i.test(a.name) ? 1 : 0))[0] || null;
+  const cs = SKOLA.csVoices = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => csRank(b) - csRank(a));
+  csVoice = cs.find(v => v.name === localStorage.getItem("schoolVoiceCz")) || cs[0] || null;
   if (!SKOLA.english) {
-    voiceWarn.innerHTML = csVoice || !all.length ? "" :
-      "⚠️ Český hlas nenalezen, nic se nebude předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>.";
+    setCzRate();
+    czVoiceUi(cs);
+    voiceWarn.innerHTML = !all.length ? "" : !csVoice ?
+      "⚠️ Český hlas nenalezen, nic se nebude předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>." :
+      cs.some(v => csRank(v) >= 10) ? "" : "💡 Přirozenější hlas: otevři stránku v <b>Microsoft Edge</b> (hlasy Antonín a Vlasta).";
     return;
   }
   const hasGB = voices.some(v => voiceRank(v) >= 100);
@@ -65,14 +102,30 @@ function speak(text, rate) {
   stopSpeech();
   speechSynthesis.speak(utter(text, rate));
 }
-function speakCz(text, rate) {
+/* Automatické předčítání vypnuté (jen stránky v češtině): čeština zazní jen po kliknutí na 🔊 prvek,
+   ne při novém zadání, zpětné vazbě ani z časovače. Vychází z právě zpracovávané události (window.event). */
+const CZ_MANUAL = ".clk, [data-say], .sp, .chip, .w, #listen";
+function czAllowed() {
+  if (SKOLA.english || SKOLA.autoRead !== false) return true;
+  const e = window.event;
+  if (!e || e.type !== "click" || !e.target || !e.target.closest) return false;
+  const el = e.target.closest(`button, ${CZ_MANUAL}`);
+  /* jedno předčtení na kliknutí: klik na slovo-odpověď přečte slovo, ale už ne následnou zpětnou vazbu */
+  if (!el || czAllowed.last === e || !(el.matches(CZ_MANUAL) || /🔊|🐢/.test(el.textContent))) return false;
+  czAllowed.last = e;
+  return true;
+}
+function czSpeakNow(text, rate) {
   if (!("speechSynthesis" in window) || !csVoice) return;
   stopSpeech();
   speechSynthesis.speak(czUtter(text, rate));
 }
+function speakCz(text, rate) {
+  if (czAllowed()) czSpeakNow(text, rate);
+}
 /* české položky postupně s pauzou (řada vyjmenovaných slov) */
 function speakSeqCz(items, pause = 350, rate) {
-  if (!("speechSynthesis" in window) || !csVoice) return;
+  if (!("speechSynthesis" in window) || !csVoice || !czAllowed()) return;
   stopSpeech();
   const id = seqToken;
   let k = 0;
@@ -120,10 +173,11 @@ function finish(correct, total, again) {
    opt.english: false – stránka jen v češtině: bez výběru anglického hlasu a varování o britském hlasu */
 function skolaStart(opt) {
   Object.assign(SKOLA, opt);
+  SKOLA.czRateFixed = "czRate" in opt;
   score = +(localStorage.getItem(SKOLA.scoreKey) || 0);
   document.getElementById("score").textContent = score;
   const voiceSel = document.getElementById("voiceSel");
-  if (!SKOLA.english) { SKOLA.czech = true; if (voiceSel) voiceSel.closest(".voice").style.display = "none"; }
+  if (!SKOLA.english) { SKOLA.czech = true; if (voiceSel) voiceSel.closest(".voice").style.display = "none"; czBar(); }
   else voiceSel.onchange = () => {
     voice = voices.find(v => v.name === voiceSel.value);
     localStorage.setItem("schoolVoice", voice.name);

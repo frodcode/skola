@@ -82,7 +82,7 @@ function learn() {
   const block = (a, b, op, s, title, intro) => `<h3 class="hs" data-say="${title}">${op === "+" ? "➕" : "➖"} ${title} <span class="ico">🔊</span></h3>
     <div class="box clk" data-say="${intro}">${intro} <span class="ico">🔊</span></div>
     <div class="col-wrap">${table(a, b, op, Object.fromEntries(s.cols.map((c, k) => [k, { d: c.d }])), Object.fromEntries(s.cols.map((c, k) => [k + 1, c.c]).filter(x => x[1])), -1)}</div>
-    ${s.cols.map((c, k) => `<div class="ex center clk" data-say="${c.t}">${["Jednotky", "Desítky", "Stovky", "Tisíce"][k] || ""}: ${c.t} <span class="ico">🔊</span></div>`).join("")}`;
+    ${s.cols.map((c, k) => `<div class="ex center clk" data-say="${czRead(c.t)}">${["Jednotky", "Desítky", "Stovky", "Tisíce"][k] || ""}: ${c.t} <span class="ico">🔊</span></div>`).join("")}`;
   app.innerHTML = `<h2 class="clk" data-say="Písemné sčítání a odčítání">📖 Písemné sčítání a odčítání <span class="ico">🔊</span></h2>
     <div class="box clk" data-say="Čísla píšu přesně pod sebe: jednotky pod jednotky, desítky pod desítky, stovky pod stovky. Počítám zprava, od jednotek.">📏 Čísla píšu <b>přesně pod sebe</b> (jednotky pod jednotky…). Počítám <b>zprava</b> – od jednotek. <span class="ico">🔊</span></div>
     ${block(358, 476, "+", p, "Sčítání", "Sečtu sloupec. Když vyjde víc než 9, píšu jednotky a 1 si pamatuju do dalšího sloupce.")}
@@ -106,7 +106,7 @@ function practice(gen, title, again) {
       app.querySelector("#hint").onclick = () => { if (k >= s.cols.length) return; tries = Math.max(tries, 1); mistakes = Math.max(mistakes, 1); show(s.cols[k].h); };
       app.querySelector("#skip").onclick = () => { if (k < s.cols.length) { mistakes += 2; give(); } };
     }
-    const show = t => { const fb = app.querySelector("#fb"); fb.innerHTML = `<span class="note">${t}</span>`; speakCz(t); };
+    const show = (t, say = t) => { const fb = app.querySelector("#fb"); fb.innerHTML = `<span class="note">${t}</span>`; speakCz(czRead(say)); };
     function advance(given) {
       const col = s.cols[k];
       filled[k] = { d: col.d, given };
@@ -119,7 +119,7 @@ function practice(gen, title, again) {
       app.querySelectorAll(".pad button, #hint, #skip").forEach(b => b.disabled = true);
       setTimeout(() => done(mistakes < 2), 2500);
     }
-    function give() { const t = s.cols[k].t; advance(true); speakCz(t); }
+    function give() { const t = s.cols[k].t; advance(true); speakCz(czRead(t)); }
     function put(d) {
       if (k >= s.cols.length) return;
       if (d === s.cols[k].d) { advance(false); return; }
@@ -128,7 +128,7 @@ function practice(gen, title, again) {
       cell.textContent = d; cell.classList.add("wrong");
       setTimeout(() => { cell.textContent = ""; cell.classList.remove("wrong"); }, 500);
       if (tries >= 3) return setTimeout(give, 600);
-      show(`Ještě ne (pokus ${tries}/3). ${s.cols[k].h}`);
+      show(`Ještě ne (pokus ${tries}/3). ${s.cols[k].h}`, `Ještě ne. ${s.cols[k].h}`);
     }
     document.onkeydown = e => { if (/^\d$/.test(e.key) && document.getElementById("ask")) put(+e.key); };
     draw();
