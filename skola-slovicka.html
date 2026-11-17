@@ -23,8 +23,7 @@
   .card { background: #f3f0ff; border-radius: 14px; padding: 12px; text-align: center; cursor: pointer; border: 3px solid transparent; user-select: none; }
   .card .emoji { font-size: 2rem; }
   .card .en { font-weight: bold; font-size: 1.1rem; color: #3a2d99; }
-  .card .cz { color: #555; border-radius: 8px; }
-  .card .cz:hover { background: #e4ddff; }
+  .card .cz { color: #555; }
   .card .ico { font-size: .8em; opacity: .55; }
   .big { cursor: pointer; }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -142,6 +141,13 @@ function speak(text) {
   u.rate = 0.85;
   speechSynthesis.speak(u);
 }
+function speakBoth(w) {
+  speak(w.en);
+  if (!csVoice) return;
+  const u = new SpeechSynthesisUtterance(w.cz);
+  u.voice = csVoice; u.lang = csVoice.lang; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
 function speakCz(text) {
   if (!("speechSynthesis" in window) || !csVoice) return;
   speechSynthesis.cancel();
@@ -160,12 +166,11 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 /* 📖 Learn */
 function learn() {
   app.innerHTML = `<h2>📖 Slovíčka – klikni a poslechni si výslovnost</h2><div class="grid">${
-    WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz} <span class="ico">🔊</span></div></div>`).join("")
+    WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz}</div></div>`).join("")
   }</div>`;
   app.querySelectorAll(".card").forEach(c => {
     const w = WORDS[c.dataset.i];
-    c.onclick = () => speak(w.en);
-    c.querySelector(".cz").onclick = e => { e.stopPropagation(); speakCz(w.cz); };
+    c.onclick = () => speakBoth(w);
   });
 }
 
