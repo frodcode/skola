@@ -202,10 +202,10 @@ function cvicChoice(o) {
     app.querySelector("#q").onclick = say;
     if (o.ask) app.querySelector("#ask").onclick = () => speakCz(czClean(o.ask));
     app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
-      app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.t === x.a) y.classList.add("ok"); });
+      app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.t === String(x.a)) y.classList.add("ok"); });
       const fb = app.querySelector("#fb"), why = x.why ? `<span class="note">${x.why}</span>` : "";
       if (x.after) speakCz(x.after);
-      if (b.dataset.t === x.a) {
+      if (b.dataset.t === String(x.a)) {
         addScore(2);
         fb.innerHTML = `<span class="good">Výborně! ⭐${why}</span>`;
         setTimeout(() => done(true), x.why ? 2200 : 1300);
@@ -242,7 +242,7 @@ function cvicSort(o) {
   app.querySelectorAll(".col").forEach(c => c.onclick = () => {
     if (!selected) { speakCz(czClean(c.querySelector("h3").textContent)); fb.innerHTML = `<span class="badc">Nejdřív klikni na slovo 🙂</span>`; return; }
     const t = selected, x = set[t.dataset.i], why = x.why ? `<span class="note">${x.why}</span>` : "";
-    if (c.dataset.k === x.k) {
+    if (c.dataset.k === String(x.k)) {
       t.remove(); selected = null;
       app.querySelectorAll(".col").forEach(k => k.classList.remove("hot"));
       const d = document.createElement("div"); d.className = "chip done"; d.innerHTML = x.t; c.appendChild(d);
