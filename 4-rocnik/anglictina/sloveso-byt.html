@@ -48,6 +48,15 @@
   .sp:hover { border-color: #5b4bb7; }
   .sp.on { background: #ddd6ff; border-color: #5b4bb7; }
   .sp .ico { font-size: .85em; }
+  .sp.czs { font-weight: normal; font-style: italic; color: #555; background: #f4f4f4; }
+  .sp.czs.on { background: #e6e6e6; border-color: #999; }
+  .t .czs.sm { margin-top: 4px; font-size: .9em; }
+  .clk { cursor: pointer; }
+  .clk:hover { text-decoration: underline dotted; }
+  .clk .ico { font-size: .7em; }
+  h3.hs { cursor: pointer; }
+  h3.hs:hover { text-decoration: underline; }
+  h3.hs .ico { font-size: .8em; }
   .en { font-weight: bold; color: #3a2d99; }
   .short { color: #888; }
   .sent { font-size: 1.6rem; text-align: center; margin: 14px 0 6px; font-weight: bold; color: #3a2d99; }
@@ -114,7 +123,7 @@ scoreEl.textContent = score;
 function addScore(n) { score += n; localStorage.setItem("beScore", score); scoreEl.textContent = score; }
 function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
-let voices = [], voice = null;
+let voices = [], voice = null, csVoice = null;
 const voiceSel = document.getElementById("voiceSel"), voiceWarn = document.getElementById("voiceWarn");
 function voiceRank(v) {
   const l = v.lang.replace("_", "-").toLowerCase(), n = v.name.toLowerCase();
@@ -127,11 +136,15 @@ function voiceRank(v) {
 }
 function loadVoices() {
   if (!("speechSynthesis" in window)) { voiceWarn.textContent = "Tento prohlížeč neumí předčítat."; return; }
-  voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  const all = speechSynthesis.getVoices();
+  voices = all.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceRank(b) - voiceRank(a));
+  csVoice = all.filter(v => /^cs/i.test(v.lang)).sort((a, b) => (/natural|online|neural/i.test(b.name) ? 1 : 0) - (/natural|online|neural/i.test(a.name) ? 1 : 0))[0] || null;
   const hasGB = voices.some(v => voiceRank(v) >= 100);
-  voiceWarn.innerHTML = hasGB ? "" :
+  voiceWarn.innerHTML = (hasGB ? "" :
     "⚠️ Britský hlas nenalezen. Otevřete stránku v <b>Microsoft Edge</b> (hlasy Sonia/Ryan) nebo v <b>Chrome</b> (Google UK English), " +
-    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.";
+    "případně ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → English (United Kingdom) se zaškrtnutým <i>Převod textu na řeč</i>, pak restartovat prohlížeč.") +
+    (csVoice || !all.length ? "" : (hasGB ? "" : "<br>") +
+    "⚠️ Český hlas nenalezen, čeština se nebude předčítat. Ve Windows: Nastavení → Čas a jazyk → Jazyk a oblast → Přidat jazyk → Čeština se zaškrtnutým <i>Převod textu na řeč</i>.");
   if (!voices.length) { voiceSel.innerHTML = "<option>žádný anglický hlas</option>"; return; }
   const saved = localStorage.getItem("schoolVoice");
   voice = voices.find(v => v.name === saved) || voices[0];
@@ -147,6 +160,13 @@ function speak(text, rate) {
   const u = new SpeechSynthesisUtterance(text);
   if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
   u.rate = rate || 0.8;
+  speechSynthesis.speak(u);
+}
+function speakCz(text) {
+  if (!("speechSynthesis" in window) || !csVoice) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = csVoice; u.lang = csVoice.lang; u.rate = 0.9;
   speechSynthesis.speak(u);
 }
 function norm(s) { return s.toLowerCase().replace(/[’‘`´]/g, "'").replace(/\s+/g, " ").trim(); }
@@ -197,16 +217,18 @@ function accepted(x, kind) {
 }
 
 /* 📖 Learn */
-const sp = t => `<span class="sp" data-say="${t}">${t} <span class="ico">🔊</span></span>`;
+const sp = (t, cz) => `<span class="sp" data-say="${t}">${t} <span class="ico">🔊</span></span>` + (cz ? `<br>${spCz(cz, "sm")}` : "");
+const spCz = (t, cls) => `<span class="sp czs ${cls || ""}" data-cz="${t.replace(/ \/ /g, " nebo ")}">${t} <span class="ico">🔊</span></span>`;
+const h3 = (html, cz) => `<h3 class="hs" data-cz="${cz}">${html} <span class="ico">🔊</span></h3>`;
 function row(en, short, cz) {
-  return `<tr><td>${sp(en)}</td><td>${sp(short)}</td><td>${cz}</td></tr>`;
+  return `<tr><td>${sp(en)}</td><td>${sp(short)}</td><td>${spCz(cz)}</td></tr>`;
 }
-function row3(a, b, c) { return `<tr><td>${sp(a)}</td><td>${sp(b)}</td><td>${sp(c)}</td></tr>`; }
+function row3(a, b, c) { return `<tr><td>${sp(...a)}</td><td>${sp(...b)}</td><td>${sp(...c)}</td></tr>`; }
 function learn() {
   app.innerHTML = `<h2>📖 Sloveso být – <i>to be</i></h2>
-    <p>Klikni na anglický text s 🔊 a poslechni si výslovnost. Sloveso <b>být</b> má v přítomném čase jen tři tvary: <b>am</b>, <b>is</b>, <b>are</b>.</p>
+    <p>Klikni na text s 🔊 – anglický i český – a poslechni si ho. Sloveso <b>být</b> má v přítomném čase jen tři tvary: <b>am</b>, <b>is</b>, <b>are</b>.</p>
 
-    <h3>✅ Oznamovací věty</h3>
+    ${h3("✅ Oznamovací věty", "Oznamovací věty")}
     <table class="t"><tr><th>celý tvar</th><th>zkrácený tvar</th><th>česky</th></tr>
       ${row("I am", "I'm", "já jsem")}
       ${row("you are", "you're", "ty jsi")}
@@ -219,7 +241,7 @@ function learn() {
     </table>
     <div class="box">💡 <b>I</b> (já) se píše vždy velkým písmenem. Tom, my mum, Anna = <b>he / she</b> → <b>is</b>. Více lidí nebo věcí (the pencils, my friends) = <b>they</b> → <b>are</b>.</div>
 
-    <h3>❌ Zápor – přidáme <i>not</i></h3>
+    ${h3("❌ Zápor – přidáme <i>not</i>", "Zápor. Přidáme slovíčko not.")}
     <table class="t"><tr><th>celý tvar</th><th>zkrácený tvar</th><th>česky</th></tr>
       ${row("I am not", "I'm not", "já nejsem")}
       ${row("you are not", "you aren't", "ty nejsi")}
@@ -232,31 +254,31 @@ function learn() {
     </table>
     <div class="box">⚠️ <b>I amn't</b> neexistuje – říkáme <b>I'm not</b>.</div>
 
-    <h3>❓ Otázka – <i>am / is / are</i> jde na začátek</h3>
+    ${h3("❓ Otázka – <i>am / is / are</i> jde na začátek", "Otázka. Sloveso být jde na začátek věty.")}
     <table class="t"><tr><th>oznamovací věta</th><th></th><th>otázka</th></tr>
-      <tr><td>${sp("You are happy.")}</td><td>➡️</td><td>${sp("Are you happy?")}</td></tr>
-      <tr><td>${sp("He is at home.")}</td><td>➡️</td><td>${sp("Is he at home?")}</td></tr>
-      <tr><td>${sp("They are friends.")}</td><td>➡️</td><td>${sp("Are they friends?")}</td></tr>
-      <tr><td>${sp("I am late.")}</td><td>➡️</td><td>${sp("Am I late?")}</td></tr>
+      <tr><td>${sp("You are happy.", "Jsi šťastný.")}</td><td>➡️</td><td>${sp("Are you happy?", "Jsi šťastný?")}</td></tr>
+      <tr><td>${sp("He is at home.", "Je doma.")}</td><td>➡️</td><td>${sp("Is he at home?", "Je doma?")}</td></tr>
+      <tr><td>${sp("They are friends.", "Jsou kamarádi.")}</td><td>➡️</td><td>${sp("Are they friends?", "Jsou kamarádi?")}</td></tr>
+      <tr><td>${sp("I am late.", "Jdu pozdě.")}</td><td>➡️</td><td>${sp("Am I late?", "Jdu pozdě?")}</td></tr>
     </table>
 
-    <h3>💬 Krátké odpovědi</h3>
+    ${h3("💬 Krátké odpovědi", "Krátké odpovědi")}
     <table class="t"><tr><th>otázka</th><th>ano 👍</th><th>ne 👎</th></tr>
-      ${row3("Are you ten?", "Yes, I am.", "No, I'm not.")}
-      ${row3("Is he your brother?", "Yes, he is.", "No, he isn't.")}
-      ${row3("Is it a cat?", "Yes, it is.", "No, it isn't.")}
-      ${row3("Are they happy?", "Yes, they are.", "No, they aren't.")}
+      ${row3(["Are you ten?", "Je ti deset?"], ["Yes, I am.", "Ano, je."], ["No, I'm not.", "Ne, není."])}
+      ${row3(["Is he your brother?", "Je to tvůj bratr?"], ["Yes, he is.", "Ano, je."], ["No, he isn't.", "Ne, není."])}
+      ${row3(["Is it a cat?", "Je to kočka?"], ["Yes, it is.", "Ano, je."], ["No, it isn't.", "Ne, není."])}
+      ${row3(["Are they happy?", "Jsou šťastní?"], ["Yes, they are.", "Ano, jsou."], ["No, they aren't.", "Ne, nejsou."])}
     </table>
     <div class="box">⚠️ V odpovědi <b>ano</b> se nezkracuje: <span class="ok-x">Yes, I am. ✔</span> &nbsp; <span class="no-x">Yes, I'm. ✘</span><br>
       Na otázku <b>Are you…?</b> (jsi?) odpovídáš <b>I am</b> (já jsem).</div>
 
-    <h3>🗣️ Pozor na češtinu</h3>
-    <div class="box">Česky říkáme <b>„Je mi deset let.“</b>, anglicky ale ${sp("I am ten.")} (já jsem deset).<br>
-      Česky stačí <b>„Je to kočka.“</b>, anglicky musí být podmět: ${sp("It is a cat.")}</div>`;
-  app.querySelectorAll(".sp").forEach(s => s.onclick = () => {
+    ${h3("🗣️ Pozor na češtinu", "Pozor na češtinu")}
+    <div class="box">Česky říkáme ${spCz("Je mi deset let.")}, anglicky ale ${sp("I am ten.")} (já jsem deset).<br>
+      Česky stačí ${spCz("Je to kočka.")}, anglicky musí být podmět: ${sp("It is a cat.")}</div>`;
+  app.querySelectorAll(".sp, .hs").forEach(s => s.onclick = () => {
     app.querySelectorAll(".sp.on").forEach(x => x.classList.remove("on"));
-    s.classList.add("on");
-    speak(s.dataset.say, 0.7);
+    if (s.classList.contains("sp")) s.classList.add("on");
+    if (s.dataset.cz) speakCz(s.dataset.cz); else speak(s.dataset.say, 0.7);
   });
 }
 /* společný kvíz s výběrem odpovědi */
@@ -273,6 +295,7 @@ function runMC(title, again, items) {
       <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
     const btns = [...app.querySelectorAll(".options button")];
     btns.forEach((b, k) => { b.textContent = opts[k]; });
+    app.querySelectorAll(".clk").forEach(c => c.onclick = () => c.dataset.cz ? speakCz(c.dataset.cz) : speak(c.dataset.say, 0.7));
     btns.forEach((b, k) => b.onclick = () => {
       btns.forEach((x, m) => { x.disabled = true; if (opts[m] === it.correct) x.classList.add("ok"); });
       const fb = app.querySelector("#fb");
@@ -299,11 +322,11 @@ function fill() {
   const items = shuffle(SENTENCES).slice(0, 10).map(x => {
     const b = be(x), t = pick(["pos", "pos", "neg", "q"]);
     if (t === "pos") return { fixed: true, opts: ["am", "is", "are"], correct: b, say: pos(x), note: RULE[b],
-      html: `<div class="sent">${x.s} <span class="gap">?</span> ${x.r}.</div><p class="cz">${x.cz}</p>` };
+      html: `<div class="sent clk" data-say="${pos(x)}">${x.s} <span class="gap">?</span> ${x.r}. <span class="ico">🔊</span></div><p class="cz clk" data-cz="${x.cz}">${x.cz} <span class="ico">🔊</span></p>` };
     if (t === "neg") return { fixed: true, opts: ["am not", "isn't", "aren't"], correct: b === "am" ? "am not" : b + "n't", say: negShort(x),
-      note: RULE[b] + " + not", html: `<div class="sent">${x.s} <span class="gap">?</span> ${x.r}.</div><p class="cz">${x.czN}</p>` };
+      note: RULE[b] + " + not", html: `<div class="sent clk" data-say="${negShort(x)}">${x.s} <span class="gap">?</span> ${x.r}. <span class="ico">🔊</span></div><p class="cz clk" data-cz="${x.czN}">${x.czN} <span class="ico">🔊</span></p>` };
     return { fixed: true, opts: ["Am", "Is", "Are"], correct: cap(b), say: quest(x), note: RULE[b] + " – v otázce jde na začátek",
-      html: `<div class="sent"><span class="gap">?</span> ${lowerFirst(x.s)} ${x.r}?</div><p class="cz">${x.czQ}</p>` };
+      html: `<div class="sent clk" data-say="${quest(x)}"><span class="gap">?</span> ${lowerFirst(x.s)} ${x.r}? <span class="ico">🔊</span></div><p class="cz clk" data-cz="${x.czQ}">${x.czQ} <span class="ico">🔊</span></p>` };
   });
   runMC("🧩 Doplň správný tvar", fill, items);
 }
@@ -355,7 +378,7 @@ function order() {
     if (pool.map(p => p.w).join(" ") === tokens.join(" ")) pool.reverse();
     app.innerHTML = `<h2>🧱 Slož ${t === "q" ? "otázku ❓" : "zápor ❌"} (${i + 1}/${list.length})</h2>
       <div class="progress"><div style="width:${i / list.length * 100}%"></div></div>
-      <p class="cz"><b>${t === "q" ? x.czQ : x.czN}</b></p>
+      <p class="cz clk" id="czq" data-cz="${t === "q" ? x.czQ : x.czN}"><b>${t === "q" ? x.czQ : x.czN}</b> <span class="ico">🔊</span></p>
       <div class="wrap ans" id="ans"></div>
       <div class="wrap" id="pool"></div>
       <div class="center">
@@ -370,9 +393,10 @@ function order() {
       ansEl.innerHTML = ""; poolEl.innerHTML = "";
       ans.forEach(p => { const d = document.createElement("span"); d.className = "wt"; d.textContent = p.w; d.onclick = () => { if (locked) return; ans = ans.filter(q => q !== p); pool.push(p); render(); }; ansEl.appendChild(d); });
       const pu = document.createElement("span"); pu.className = "punct"; pu.textContent = t === "q" ? "?" : "."; ansEl.appendChild(pu);
-      pool.forEach(p => { const d = document.createElement("span"); d.className = "wt"; d.textContent = p.w; d.onclick = () => { if (locked) return; pool = pool.filter(q => q !== p); ans.push(p); render(); }; poolEl.appendChild(d); });
+      pool.forEach(p => { const d = document.createElement("span"); d.className = "wt"; d.textContent = p.w; d.onclick = () => { if (locked) return; pool = pool.filter(q => q !== p); ans.push(p); speak(p.w, 0.8); render(); }; poolEl.appendChild(d); });
     }
     render();
+    app.querySelector("#czq").onclick = e => speakCz(e.currentTarget.dataset.cz);
     const done = ok => {
       locked = true; speak(full);
       if (ok) { const pts = tries === 0 ? 3 : 1; correct++; addScore(pts); fb.innerHTML = `<span class="good">Správně! 🎉 +${pts}<span class="note">${full}</span></span>`; setTimeout(() => { i++; show(); }, 1900); }
