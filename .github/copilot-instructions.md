@@ -27,6 +27,12 @@ common/skola.css, skola.js    sdílený styl + logika (hlas, body, režimy, engi
    - `alt` obsahuje rozumné alternativní odpovědi (synonyma, americká varianta, varianta bez apostrofu).
    - Volitelně `learnExtra: "<div class='box'>…</div>"` přidá vysvětlení pod kartičky.
 4. Vzor s členy a vysvětlením: `veci-denni-potreby.html`.
+5. Režim 👂 Poslech (zazní slovo, dítě klikne na 1 ze 4 obrázků – bez čtení): přidej do `<nav>` tlačítko `data-mode="listen"`. `e` může být i HTML (barevná tečka, SVG).
+6. `groups: [{ title, words }]` rozdělí Učím se do sekcí s nadpisy; může obsahovat i slova mimo `words` (bonus).
+
+### 2. ročník
+
+Slovíčka jsou sdílená v `2-rocnik/anglictina/slovicka.js` (globální `AJ2`: `numbers`, `numbersBonus`, `colours`, `autumn`, `school`) a používají je stránky témat i `opakovani.html`. Stránky 2. ročníku nemají režim Psaní (dítě teprve začíná číst); režimy: Učím se, Poslech, Přiřazování, Kvíz.
 
 ## Gramatická / vlastní stránka
 
@@ -54,7 +60,7 @@ Globální proměnné nikdy znovu nedeklaruj přes let/const: `app`, `SKOLA`, `s
 | Funkce | Popis |
 |---|---|
 | `skolaStart({ scoreKey, modes, demo, rate=0.85, czRate=0.9, czech=true })` | Načte body a hlasy, napojí `<nav>` a spustí režim s class `active`. `czech:false` vypne varování o chybějícím českém hlasu. |
-| `skolaVocab({ ...skolaStart, words, learnExtra, modes? })` | Kompletní stránka slovíček s režimy learn / match / quiz / write. |
+| `skolaVocab({ ...skolaStart, words, groups?, learnExtra, modes? })` | Kompletní stránka slovíček s režimy learn / listen / match / quiz / write (zobrazí se ty, které mají tlačítko v `<nav>`). |
 | `speak(text, rate?)` | Přečte text britsky; použije `SKOLA.say[text]`, pokud je definováno. |
 | `speakCz(text)` | Přečte text česky. |
 | `speakBoth(en, cz)` | Přečte anglicky, pak česky. |

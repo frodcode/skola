@@ -122,6 +122,9 @@ function skolaStart(opt) {
    words: [{ cz, en, alt?: [], e: "emoji", say?: "jak vyslovit", w?: "slovo bez členu" }]
    – en se zobrazuje a vyslovuje (může obsahovat člen: "a laptop"); v psaní se uzná i bez členu,
      u slov bez členu (glasses) se naopak člen neuzná.
+   – e může být i HTML (např. barevná tečka <span style=…>).
+   Režim listen (👂 Poslech: zazní slovo, klikne se na obrázek) se zobrazí jen s tlačítkem data-mode="listen".
+   opt.groups – [{ title, words }] pro Učím se po skupinách (může obsahovat i slova mimo words, např. bonus);
    opt.learnExtra – HTML pod kartičkami v režimu Učím se; ostatní volby viz skolaStart */
 function skolaVocab(opt) {
   const WORDS = opt.words;
@@ -134,10 +137,41 @@ function skolaVocab(opt) {
   };
 
   function learn() {
-    app.innerHTML = `<h2>📖 Slovíčka – klikni a poslechni si výslovnost</h2><div class="grid">${
-      WORDS.map((w, i) => `<div class="card" data-i="${i}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz}</div></div>`).join("")
-    }</div>${opt.learnExtra || ""}`;
-    app.querySelectorAll(".card").forEach(c => { const w = WORDS[c.dataset.i]; c.onclick = () => speakBoth(w.en, w.cz); });
+    const groups = opt.groups || [{ words: WORDS }], all = groups.flatMap(g => g.words);
+    const cards = ws => `<div class="grid">${ws.map(w => `<div class="card" data-i="${all.indexOf(w)}"><div class="emoji">${w.e}</div><div class="en">${w.en} <span class="ico">🔊</span></div><div class="cz">${w.cz}</div></div>`).join("")}</div>`;
+    app.innerHTML = `<h2>📖 Slovíčka – klikni a poslechni si výslovnost</h2>${
+      groups.map(g => (g.title ? `<h3 class="hs">${g.title} <span class="ico">🔊</span></h3>` : "") + cards(g.words)).join("")
+    }${opt.learnExtra || ""}`;
+    app.querySelectorAll(".card").forEach(c => { const w = all[c.dataset.i]; c.onclick = () => speakBoth(w.en, w.cz); });
+    app.querySelectorAll("h3.hs").forEach(h => h.onclick = () => speakCz(h.textContent.replace(/[^\p{L}\p{N}\s–-]/gu, "").trim()));
+  }
+
+  function listen() {
+    const order = shuffle(WORDS).slice(0, 10);
+    let i = 0, correct = 0;
+    function show() {
+      if (i >= order.length) return finish(correct, order.length, listen);
+      const w = order[i];
+      const opts = shuffle([w, ...shuffle(WORDS.filter(x => x !== w && x.e !== w.e)).slice(0, 3)]);
+      app.innerHTML = `<h2>👂 Poslech (${i + 1}/${order.length})</h2>
+        <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+        <div class="center"><button class="btn" id="rep">🔊 Poslechnout znovu</button></div>
+        <p class="center clk" id="task">Klikni na obrázek, který slyšíš. <span class="ico">🔊</span></p>
+        <div class="options pics">${opts.map((o, k) => `<button data-k="${k}">${o.e}</button>`).join("")}</div>
+        <div class="feedback" id="fb"></div>`;
+      speak(w.en);
+      app.querySelector("#rep").onclick = () => speak(w.en);
+      app.querySelector("#task").onclick = () => speakCz("Klikni na obrázek, který slyšíš.");
+      app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+        app.querySelectorAll(".options button").forEach(x => { x.disabled = true; if (opts[x.dataset.k] === w) x.classList.add("ok"); });
+        const fb = app.querySelector("#fb");
+        if (opts[b.dataset.k] === w) { correct++; addScore(2); fb.innerHTML = `<span class="good">Výborně! ⭐ ${w.en} = ${w.cz}</span>`; }
+        else { b.classList.add("bad"); fb.innerHTML = `<span class="badc">To bylo: ${w.e} ${w.en} = ${w.cz}</span>`; }
+        speak(w.en);
+        setTimeout(() => { i++; show(); }, 1700);
+      });
+    }
+    show();
   }
 
   function match() {
@@ -150,7 +184,7 @@ function skolaVocab(opt) {
     const colEn = app.querySelector("#colEn"), colCz = app.querySelector("#colCz"), fb = app.querySelector("#fb");
     const mk = (w, side) => {
       const t = document.createElement("div");
-      t.className = "tile"; t.textContent = side === "en" ? w.en : `${w.e} ${w.cz}`;
+      t.className = "tile"; t.innerHTML = side === "en" ? w.en : `${w.e} ${w.cz}`;
       t.dataset.key = w.en; t.dataset.side = side;
       t.onclick = () => choose(t);
       return t;
@@ -257,5 +291,5 @@ function skolaVocab(opt) {
     show();
   }
 
-  skolaStart({ ...opt, modes: { learn, match, quiz, write, ...(opt.modes || {}) } });
+  skolaStart({ ...opt, modes: { learn, listen, match, quiz, write, ...(opt.modes || {}) } });
 }

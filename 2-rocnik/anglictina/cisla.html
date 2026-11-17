@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<title>Čísla – Numbers 🔢</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .card .emoji { font-weight: bold; color: #5b4bb7; }
+  .bonus { text-align: center; color: #fff; font-weight: bold; margin: 4px 0 0; }
+  .bonus label { cursor: pointer; background: rgba(91,75,183,.35); padding: 6px 14px; border-radius: 20px; display: inline-block; }
+  .bonus input { width: 18px; height: 18px; vertical-align: -3px; }
+  .things { font-size: 2.4rem; text-align: center; line-height: 1.3; margin: 10px auto; max-width: 560px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🔢 Numbers – Čísla</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voice">🔊 Hlas: <select id="voiceSel"><option>načítám…</option></select></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<div class="bonus"><label><input type="checkbox" id="bonus"> ⭐ Bonus: procvičovat čísla až do 20</label></div>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="listen">👂 Poslech</button>
+  <button data-mode="count">🍎 Kolik jich je?</button>
+  <button data-mode="match">🔗 Přiřazování</button>
+  <button data-mode="quiz">❓ Kvíz</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="slovicka.js"></script>
+<script>
+const THINGS = [["🍎", "apples"], ["🍁", "leaves"], ["🌰", "chestnuts"], ["🍄", "mushrooms"], ["⭐", "stars"], ["✏️", "pencils"], ["🎈", "balloons"]];
+const bonusBox = document.getElementById("bonus");
+
+function words() { return bonusBox.checked ? [...AJ2.numbers, ...AJ2.numbersBonus] : AJ2.numbers; }
+
+function count() {
+  const order = shuffle(words()).slice(0, 10);
+  let i = 0, correct = 0;
+  function show() {
+    if (i >= order.length) return finish(correct, order.length, count);
+    const w = order[i], [emoji, plural] = pick(THINGS);
+    const near = words().filter(x => x !== w).sort((a, b) => Math.abs(a.n - w.n) - Math.abs(b.n - w.n)).slice(0, 5);
+    const opts = shuffle([w, ...shuffle(near).slice(0, 3)]);
+    const ask = () => speak(`How many ${plural}?`, 0.8);
+    app.innerHTML = `<h2>🍎 Kolik jich je? (${i + 1}/${order.length})</h2>
+      <div class="progress"><div style="width:${i / order.length * 100}%"></div></div>
+      <p class="center clk" id="q"><b>How many ${plural}?</b> <span class="ico">🔊</span></p>
+      <div class="things">${emoji.repeat(w.n)}</div>
+      <p class="center clk" id="task">Spočítej je a klikni na správné anglické číslo. <span class="ico">🔊</span></p>
+      <div class="options">${opts.map((o, k) => `<button data-k="${k}">${o.en}</button>`).join("")}</div>
+      <div class="feedback" id="fb"></div>`;
+    ask();
+    app.querySelector("#q").onclick = ask;
+    app.querySelector("#task").onclick = () => speakCz("Spočítej je a klikni na správné anglické číslo.");
+    app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+      app.querySelectorAll(".options button").forEach(x => { x.disabled = true; if (opts[x.dataset.k] === w) x.classList.add("ok"); });
+      const fb = app.querySelector("#fb");
+      if (opts[b.dataset.k] === w) { correct++; addScore(2); fb.innerHTML = `<span class="good">Výborně! ⭐ ${w.n} = ${w.en}</span>`; }
+      else { b.classList.add("bad"); fb.innerHTML = `<span class="badc">Je jich ${w.n} = ${w.en}</span>`; }
+      speak(`${w.en} ${plural}`);
+      setTimeout(() => { i++; show(); }, 1800);
+    });
+  }
+  show();
+}
+
+function start() {
+  skolaVocab({
+    scoreKey: "g2NumbersScore",
+    demo: "One, two, three!",
+    words: words(),
+    groups: [{ title: "🔢 Čísla 1–10", words: AJ2.numbers }, { title: "⭐ Bonus: čísla 11–20", words: AJ2.numbersBonus }],
+    modes: { count },
+  });
+}
+
+bonusBox.checked = localStorage.getItem("g2NumbersBonus") === "1";
+bonusBox.onchange = () => { localStorage.setItem("g2NumbersBonus", bonusBox.checked ? "1" : "0"); start(); };
+start();
+</script>
+</body>
+</html>
