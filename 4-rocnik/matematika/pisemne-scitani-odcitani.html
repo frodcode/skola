@@ -117,7 +117,7 @@ function practice(gen, title, again) {
       draw(`<span class="good">Hotovo! ${x.a} ${x.op === "+" ? "+" : "−"} ${x.b} = ${s.res} 🎉 +${pts}</span>`);
       speakCz(czMath(`${x.a} ${x.op === "+" ? "+" : "−"} ${x.b} = ${s.res}`));
       app.querySelectorAll(".pad button, #hint, #skip").forEach(b => b.disabled = true);
-      setTimeout(() => done(mistakes < 2), 2500);
+      cvicAfterSpeech(() => done(mistakes < 2), 2500);
     }
     function give() { const t = s.cols[k].t; advance(true); speakCz(czRead(t)); }
     function put(d) {

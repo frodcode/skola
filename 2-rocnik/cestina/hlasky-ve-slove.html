@@ -132,7 +132,7 @@ function compose() {
         const pts = mistakes ? 1 : 2; addScore(pts);
         fb.innerHTML = `<span class="good">Výborně! 🎉 +${pts}</span>`;
         speakCz(x.w, 0.8);
-        setTimeout(() => done(mistakes <= 1), 1600);
+        cvicAfterSpeech(() => done(mistakes <= 1), 1600);
       } else {
         mistakes++;
         b.classList.add("wrong"); setTimeout(() => b.classList.remove("wrong"), 400);

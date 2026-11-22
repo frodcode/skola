@@ -113,6 +113,7 @@ Prefix `scoreKey`: `cj…` pro češtinu, `m…` pro matematiku.
 |---|---|
 | `cvicHead(title, i, n)` | Klikací nadpis s počítadlem `(i+1/n)` a progress bar. |
 | `czSay(text, say?)`, `czBind(root=app)` | Klikací český text s 🔊; `czBind` napojí všechna `[data-say]` na `speakCz`. |
+| `cvicAfterSpeech(fn, ms)` | Po `ms` spustí `fn`, ale počká, až hlas dořekne (max. 8 s navíc). Použij místo `setTimeout` před přechodem na další otázku. |
 | `czClean(s)`, `czMath(s)`, `czExpr(s)`, `czRead(s)` | Přirozené čtení: `czClean` text bez HTML/emoji („ / “ → „nebo“); `czMath` příklad jako větu (`13 − 5 = ?` → „Kolik je 13 mínus 5?“, `34 + ? = 40` → „34 plus kolik je 40?“, `13 − 5 = 8` → „13 mínus 5 je 8.“); `czExpr` výraz se závorkami („20 plus 30 v závorce, mínus 10“); `czRead` výrazy uvnitř běžného textu („8 + 6 = 14, píšu 4“ → „8 plus 6 je 14, píšu 4“). Nepiš „rovná se“ ani „(pokus 1/3)“ do předčítaného textu. |
 | `cvicRound(items, again, render(x, i, n, done))` | Kolo s opakováním chyb na konci a `finish`. Základ vlastních režimů. |
 | `cvicAsk(o)` | Psaná odpověď: 3 pokusy, Nápověda / Poslechnout / Nevím, volitelná klávesnice (`numeric`, `keys(x)`). |

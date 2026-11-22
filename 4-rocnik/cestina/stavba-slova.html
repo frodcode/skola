@@ -110,7 +110,7 @@ function part() {
       if (x.roles[b.dataset.k] === x.ask) {
         addScore(2);
         fb.innerHTML = `<span class="good">Výborně! ⭐${why}</span>`;
-        setTimeout(() => done(true), 2200);
+        cvicAfterSpeech(() => done(true), 2200);
       } else {
         b.classList.add("bad");
         fb.innerHTML = `<span class="badc">${r.n[0].toUpperCase() + r.n.slice(1)} je: ${x.parts[x.roles.indexOf(x.ask)]}${why}</span>`;

@@ -33,6 +33,16 @@ function cvicHead(title, i, n) {
 function czSay(text, say) { return `<span class="sp czw" data-say="${(say || czClean(text)).replace(/"/g, "&quot;")}">${text} <span class="ico">🔊</span></span>`; }
 /* napojí všechny [data-say] v kořeni na speakCz */
 function czBind(root = app) { root.querySelectorAll("[data-say]").forEach(el => el.onclick = e => { e.stopPropagation(); speakCz(el.dataset.say); }); }
+/* po ms (aspoň) spustí fn, ale nejdřív nechá hlas doříct zpětnou vazbu (nejvýš 8 s navíc) */
+function cvicAfterSpeech(fn, ms) {
+  setTimeout(() => {
+    const end = Date.now() + 8000;
+    (function wait() {
+      if ("speechSynthesis" in window && (speechSynthesis.speaking || speechSynthesis.pending) && Date.now() < end) setTimeout(wait, 150);
+      else setTimeout(fn, 300);
+    })();
+  }, ms);
+}
 
 /* kolo s opakováním chyb: špatně zodpovězené položky se zařadí na konec */
 function cvicRound(items, again, render) {
@@ -83,7 +93,7 @@ function cvicAsk(o) {
       inp.value = b.dataset.k === "⌫" ? inp.value.slice(0, -1) : inp.value + b.dataset.k;
       if (!o.numeric) inp.focus();
     });
-    const nextIn = (ok, ms) => { over = true; inp.disabled = true; setTimeout(() => done(ok), ms); };
+    const nextIn = (ok, ms) => { over = true; inp.disabled = true; cvicAfterSpeech(() => done(ok), ms); };
     const fail = () => {
       fb.innerHTML = `<span class="badc">Správně je: <b>${o.solution ? o.solution(x) : ans}</b></span>`;
       o.after ? o.after(x) : speakCz(ans);
@@ -224,7 +234,7 @@ function cvicChoice(o) {
       if (b.dataset.t === String(x.a)) {
         addScore(2);
         fb.innerHTML = `<span class="good">Výborně! ⭐${why}</span>`;
-        setTimeout(() => done(true), x.why ? 2200 : 1300);
+        cvicAfterSpeech(() => done(true), x.why ? 2200 : 1300);
       } else {
         b.classList.add("bad");
         fb.innerHTML = `<span class="badc">Správně je: ${x.a}${why}</span>`;

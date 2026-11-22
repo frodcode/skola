@@ -119,7 +119,7 @@ function steps() {
           const pts = mistakes ? 1 : 3; addScore(pts);
           fb.innerHTML = `<span class="good">Výborně! ${x.q} = ${x.res} 🎉 +${pts}</span>`;
           speakCz(czMath(`${x.q} = ${x.res}`));
-          setTimeout(() => done(mistakes < 2), 2000);
+          cvicAfterSpeech(() => done(mistakes < 2), 2000);
         } else {
           tries++; mistakes++;
           if (tries >= 3) { fb.innerHTML = `<span class="badc">Správně je ${st.a}.</span>`; inp.value = st.a; inp.disabled = true; k++; setTimeout(() => k < S.length ? show() : done(false), 1800); }

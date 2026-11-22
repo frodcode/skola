@@ -195,7 +195,7 @@ function questions(x) {
       if (b.dataset.t === it.a) {
         addScore(2);
         fb.innerHTML = `<span class="good">Výborně! ⭐</span>`;
-        setTimeout(() => done(true), 1300);
+        cvicAfterSpeech(() => done(true), 1300);
       } else {
         b.classList.add("bad");
         fb.innerHTML = `<span class="badc">Správně je: ${it.a}<span class="note">Najdi to v textu 📄</span></span>`;
