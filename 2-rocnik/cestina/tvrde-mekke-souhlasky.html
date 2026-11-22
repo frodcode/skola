@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
+<title>Tvrdé a měkké souhlásky 🧱</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .big { font-size: 2.6rem; letter-spacing: 3px; font-weight: bold; }
+  .big .gap { min-width: 36px; text-align: center; }
+  .mark { color: #c0392b; }
+  .lets { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+  .lets .sp { font-size: 2rem; font-weight: bold; padding: 4px 12px; border-radius: 12px; }
+  .hard .sp { background: #dbe8ff; }
+  .soft .sp { background: #ffe1ec; }
+  .options.two button { font-size: 2.4rem; font-weight: bold; }
+  .sortcols .chip { font-size: 1.6rem; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🧱 Tvrdé a měkké souhlásky</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="letters">🧺 Tvrdá nebo měkká?</button>
+  <button data-mode="fill">🔍 i nebo y?</button>
+  <button data-mode="dict">✏️ Diktát</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+const HARD = ["h", "ch", "k", "r", "d", "t", "n"];
+const SOFT = ["ž", "š", "č", "ř", "c", "j", "ď", "ť", "ň"];
+/* jak souhlásku přečíst nahlas */
+const SAY = { h: "há", ch: "chá", k: "ká", r: "er", d: "dé", t: "té", n: "en", ž: "žet", š: "eš", č: "čé", ř: "eř", c: "cé", j: "jé", ď: "ďé", ť: "ťé", ň: "eň" };
+/* slova s jediným i / í / y / ý, které stojí hned za tvrdou nebo měkkou souhláskou */
+const TM = [
+  { w: "ryba", e: "🐟" }, { w: "chyba", e: "❌" }, { w: "dýně", e: "🎃" }, { w: "tygr", e: "🐯" },
+  { w: "kytara", e: "🎸" }, { w: "krysa", e: "🐀" }, { w: "brýle", e: "👓" }, { w: "kytka", e: "💐" },
+  { w: "rýže", e: "🍚" }, { w: "hyena", e: "🐾" },
+  { w: "židle", e: "🪑" }, { w: "šíp", e: "🏹" }, { w: "čísla", e: "🔢" }, { w: "řízek", e: "🍖" },
+  { w: "cibule", e: "🧅" }, { w: "jídlo", e: "🍽️" }, { w: "žirafa", e: "🦒" }, { w: "šimpanz", e: "🐒" },
+  { w: "cihla", e: "🧱" }, { w: "jiskra", e: "✨" },
+];
+const tmPos = w => [...w].findIndex(c => "iíyý".includes(c));
+const tmVowel = x => [...x.w][tmPos(x.w)];
+const tmCons = x => { const ch = [...x.w], p = tmPos(x.w); return p > 1 && ch[p - 2] === "c" && ch[p - 1] === "h" ? "ch" : ch[p - 1]; };
+const tmHard = x => HARD.includes(tmCons(x));
+const tmWhy = x => `${tmCons(x)} je ${tmHard(x) ? "tvrdá" : "měkká"} souhláska, po ní píšeme ${tmHard(x) ? "y" : "i"}`;
+const tmGap = x => { const ch = [...x.w]; ch[tmPos(x.w)] = `<span class="gap">_</span>`; return ch.join(""); };
+const tmMark = x => { const ch = [...x.w]; ch[tmPos(x.w)] = `<span class="mark">${ch[tmPos(x.w)]}</span>`; return ch.join(""); };
+const tmFew = (arr, n) => shuffle(arr).slice(0, n);
+const letSpan = l => `<span class="sp" data-say="${SAY[l]}">${l}</span>`;
+
+function learn() {
+  const ex = h => TM.filter(x => tmHard(x) === h).slice(0, 4);
+  const word = x => `<div class="box">${x.e} ${czSay(`<b>${tmMark(x)}</b>`, x.w)}</div>`;
+  app.innerHTML = `<h2 class="clk" data-say="Tvrdé a měkké souhlásky">📖 Tvrdé a měkké souhlásky <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Tvrdé souhlásky jsou h, ch, k, r, d, t, n. Po nich píšeme tvrdé y.">🧱 <b>Tvrdé souhlásky</b> – po nich píšeme <b>tvrdé y / ý</b> <span class="ico">🔊</span></div>
+    <div class="lets hard">${HARD.map(letSpan).join("")}</div>
+    <div class="box clk" data-say="Měkké souhlásky jsou ž, š, č, ř, c, j, ď, ť, ň. Po nich píšeme měkké i.">🧸 <b>Měkké souhlásky</b> – po nich píšeme <b>měkké i / í</b> <span class="ico">🔊</span></div>
+    <div class="lets soft">${SOFT.map(letSpan).join("")}</div>
+    <div class="grid">${ex(true).map(word).join("")}${ex(false).map(word).join("")}</div>
+    <p class="center note">Klikni na písmeno nebo slovo a poslechni si ho.</p>`;
+  czBind();
+}
+
+function letters() {
+  const items = shuffle([...tmFew(HARD, 5), ...tmFew(SOFT, 5)]).map(l => ({ t: l, say: SAY[l], k: HARD.includes(l) ? "t" : "m" }));
+  cvicSort({ title: "🧺 Tvrdá nebo měkká?", again: letters, items, cols: [{ k: "t", t: "🧱 tvrdé → y" }, { k: "m", t: "🧸 měkké → i" }] });
+}
+
+function fill() {
+  const items = tmFew(TM, 10).map(x => {
+    const long = "íý".includes(tmVowel(x));
+    return {
+      q: `<span class="pic">${x.e}</span><div class="big">${tmGap(x)}</div>`, say: x.w, rate: 0.7,
+      opts: long ? ["í", "ý"] : ["i", "y"], a: tmVowel(x), why: tmWhy(x), after: x.w,
+    };
+  });
+  cvicChoice({ title: "🔍 i nebo y?", items, again: fill, cls: "two" });
+}
+
+function dict() {
+  const extra = "aeouklmnst";
+  cvicDictation({
+    title: "✏️ Diktát", items: tmFew(TM, 8), again: dict, showPic: true,
+    keys: x => shuffle([...new Set([...x.w, "i", "y", "í", "ý", ...tmFew([...extra].filter(l => !x.w.includes(l)), 2)])]),
+    help: x => `${tmWhy(x)}.`,
+    wrong: (x, v) => [...v].some(c => "iíyý".includes(c)) && !v.includes(tmVowel(x)) ? `Pozor: ${tmWhy(x)}` : "Ještě ne, poslechni si slovo znovu",
+  });
+}
+
+skolaStart({ scoreKey: "cjTvrdeMekkeScore", english: false, demo: "Ryba plave, žirafa jí listy.", modes: { learn, letters, fill, dict } });
+</script>
+</body>
+</html>
