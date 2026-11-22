@@ -93,9 +93,34 @@ function utter(text, rate) {
 function czUtter(text, rate) {
   const u = new SpeechSynthesisUtterance(text);
   u.voice = csVoice; u.lang = csVoice.lang; u.rate = rate || SKOLA.czRate;
+  /* sledování rozpracovaných českých promluv – podle nich čeká czWhenQuiet */
+  const gen = czTalk.gen;
+  czTalk.n++;
+  let ended = false;
+  const end = () => { if (ended || gen !== czTalk.gen) return; ended = true; czTalk.n--; czQuietCheck(); };
+  u.addEventListener("end", end);
+  u.addEventListener("error", end);
   return u;
 }
-function stopSpeech() { seqToken++; if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+/* n = počet rozpracovaných promluv; gen se mění při stopSpeech (zrušené promluvy už nepočítáme) */
+const czTalk = { n: 0, gen: 0, waiters: [] };
+function czQuietCheck() {
+  if (!czTalk.n) czTalk.waiters.splice(0).forEach(f => f());
+}
+/* fn se spustí, až český hlas dočte (hned, pokud nic nemluví); pojistka max ms */
+function czWhenQuiet(fn, max = 15000) {
+  let done = false;
+  const go = () => { if (!done) { done = true; fn(); } };
+  setTimeout(go, max);
+  if (czTalk.n) czTalk.waiters.push(go); else go();
+}
+function stopSpeech() {
+  seqToken++;
+  czTalk.gen++; czTalk.n = 0;
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  /* po zrušení bez nové promluvy (např. vypnutí předčítání) pustí čekající dál */
+  setTimeout(czQuietCheck, 0);
+}
 /* anglicky; text se přeloží přes SKOLA.say (opravy výslovnosti, např. "PE" → "P. E.") */
 function speak(text, rate) {
   if (!("speechSynthesis" in window)) return;
@@ -122,6 +147,11 @@ function czSpeakNow(text, rate) {
 }
 function speakCz(text, rate) {
   if (czAllowed()) czSpeakNow(text, rate);
+}
+/* zařadí češtinu za právě mluvený text (bez přerušení) – např. zpětná vazba po přečteném slově */
+function speakCzNext(text, rate) {
+  if (!("speechSynthesis" in window) || !csVoice || !czAllowed()) return;
+  speechSynthesis.speak(czUtter(text, rate));
 }
 /* české položky postupně s pauzou (řada vyjmenovaných slov) */
 function speakSeqCz(items, pause = 350, rate) {

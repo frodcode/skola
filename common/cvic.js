@@ -33,15 +33,11 @@ function cvicHead(title, i, n) {
 function czSay(text, say) { return `<span class="sp czw" data-say="${(say || czClean(text)).replace(/"/g, "&quot;")}">${text} <span class="ico">🔊</span></span>`; }
 /* napojí všechny [data-say] v kořeni na speakCz */
 function czBind(root = app) { root.querySelectorAll("[data-say]").forEach(el => el.onclick = e => { e.stopPropagation(); speakCz(el.dataset.say); }); }
-/* po ms (aspoň) spustí fn, ale nejdřív nechá hlas doříct zpětnou vazbu (nejvýš 8 s navíc) */
-function cvicAfterSpeech(fn, ms) {
-  setTimeout(() => {
-    const end = Date.now() + 8000;
-    (function wait() {
-      if ("speechSynthesis" in window && (speechSynthesis.speaking || speechSynthesis.pending) && Date.now() < end) setTimeout(wait, 150);
-      else setTimeout(fn, 300);
-    })();
-  }, ms);
+/* další krok až po dočtení hlasu (+ krátká pauza na nadechnutí), bez pevného čekání.
+   Když zpětná vazba nezazněla (vypnuté předčítání, bez hlasu), nechá ji aspoň ms na přečtení. */
+function cvicAfterSpeech(fn, ms = 1500) {
+  const t0 = Date.now(), heard = SKOLA.autoRead !== false && czTalk.n > 0;
+  czWhenQuiet(() => setTimeout(fn, heard ? 600 : Math.max(600, ms - (Date.now() - t0))));
 }
 
 /* kolo s opakováním chyb: špatně zodpovězené položky se zařadí na konec */
@@ -278,7 +274,7 @@ function cvicSort(o) {
       fb.innerHTML = `<span class="good">Správně! 👍${why}</span>`;
       if (done === set.length) {
         const ok = set.length - Math.min(mistakes, set.length);
-        setTimeout(() => finish(ok, set.length, o.again), 1200);
+        cvicAfterSpeech(() => finish(ok, set.length, o.again), 1200);
       }
     } else {
       mistakes++; t.classList.add("wrong");

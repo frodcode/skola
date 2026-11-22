@@ -116,11 +116,11 @@ function find() {
         el.classList.add(step === "P" ? "pod" : "pri");
         if (step === "Q") {
           fb.innerHTML = `<span class="good">Ano! Přísudek je „${s.Q}“. 👍</span>`;
-          setTimeout(() => show("P", done), 1300);
+          cvicAfterSpeech(() => show("P", done), 1300);
         } else {
           fb.innerHTML = `<span class="good">Výborně! ⭐ ZSD: <span class="pod">${s.P}</span> – <span class="pri">${s.Q}</span></span>`;
-          setTimeout(() => speakCz(`Základní skladební dvojice: ${s.P}, ${s.Q}`), 600);
-          setTimeout(() => { k++; show("Q", {}); }, 2600);
+          speakCzNext(`Základní skladební dvojice: ${s.P}, ${s.Q}`);
+          cvicAfterSpeech(() => { k++; show("Q", {}); }, 2600);
         }
         return;
       }
@@ -133,8 +133,9 @@ function find() {
         right.classList.add(step === "P" ? "pod" : "pri");
         done = { ...done, [step]: true };
         fb.innerHTML = `<span class="badc">${step === "Q" ? "Přísudek" : "Podmět"} je „${step === "Q" ? s.Q : s.P}“.</span>`;
+        speakCzNext(`${step === "Q" ? "Přísudek" : "Podmět"} je ${step === "Q" ? s.Q : s.P}.`);
         app.querySelectorAll(".sentence .w").forEach(x => x.onclick = null);
-        setTimeout(() => step === "Q" ? show("P", done) : (k++, show("Q", {})), 2200);
+        cvicAfterSpeech(() => step === "Q" ? show("P", done) : (k++, show("Q", {})), 2200);
       } else fb.innerHTML = `<span class="badc">To není ${step === "Q" ? "přísudek" : "podmět"}. ${tip} (pokus ${tries}/3)</span>`;
     });
   }

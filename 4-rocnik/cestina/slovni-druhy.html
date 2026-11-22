@@ -132,7 +132,7 @@ function sentence() {
       if (ok) {
         correct++; addScore(2);
         fb.innerHTML = `<span class="good">Výborně! ⭐ ${cur.w} = ${d.n}. ${d.name}</span>`;
-        setTimeout(() => { k++; show(); }, 1500);
+        cvicAfterSpeech(() => { k++; show(); }, 1500);
       } else {
         b.classList.add("bad");
         fb.innerHTML = `<span class="badc">${cur.w} = ${d.n}. ${d.name}<span class="note">${d.q} – ${d.d}</span></span>`;
