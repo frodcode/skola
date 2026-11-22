@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%90%9D%3C/text%3E%3C/svg%3E">
+<title>U, Ú, Ů 🐝</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .big { font-size: 2.6rem; letter-spacing: 3px; font-weight: bold; }
+  .big .gap { min-width: 36px; text-align: center; }
+  .mark { color: #c0392b; }
+  .rules td { font-size: 1.4rem; padding: 6px 12px; }
+  .options.three button { font-size: 2.2rem; font-weight: bold; }
+  @media (max-width: 560px) { .options.three { grid-template-columns: 1fr 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🐝 U, Ú, Ů</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Učím se</button>
+  <button data-mode="fill">🔍 Doplň</button>
+  <button data-mode="sortMode">🧺 Roztřiď</button>
+  <button data-mode="dict">✏️ Diktát</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* w = slovo (jen jedno u / ú / ů), e = obrázek */
+const UU = [
+  { w: "úl", e: "🐝" }, { w: "úkol", e: "📝" }, { w: "úterý", e: "📅" }, { w: "úsměv", e: "😊" },
+  { w: "ústa", e: "👄" }, { w: "úroda", e: "🌾" }, { w: "úklid", e: "🧹" },
+  { w: "dům", e: "🏠" }, { w: "kůň", e: "🐴" }, { w: "růže", e: "🌹" }, { w: "lůžko", e: "🛏️" },
+  { w: "sůl", e: "🧂" }, { w: "stůl", e: "🍽️" }, { w: "domů", e: "🏡" }, { w: "kůra", e: "🌳" },
+  { w: "ruka", e: "✋" }, { w: "ucho", e: "👂" }, { w: "zub", e: "🦷" }, { w: "duha", e: "🌈" },
+  { w: "bunda", e: "🧥" }, { w: "luk", e: "🏹" }, { w: "ulice", e: "🏘️" }, { w: "auto", e: "🚗" },
+];
+const uPos = w => [...w].findIndex(c => "uúů".includes(c));
+const uLetter = x => [...x.w][uPos(x.w)];
+const uWhy = x => {
+  const l = uLetter(x);
+  if (l === "ú") return "ú píšeme na začátku slova";
+  if (l === "ů") return uPos(x.w) === [...x.w].length - 1 ? "ů píšeme na konci slova" : "ů píšeme uprostřed slova";
+  return "tady je krátké u – bez čárky i kroužku";
+};
+const uPic = x => `<span class="pic">${x.e || "✏️"}</span>`;
+const uGap = x => { const ch = [...x.w]; ch[uPos(x.w)] = `<span class="gap">_</span>`; return ch.join(""); };
+const uMark = x => { const ch = [...x.w]; ch[uPos(x.w)] = `<span class="mark">${ch[uPos(x.w)]}</span>`; return ch.join(""); };
+const uFew = (arr, n) => shuffle(arr).slice(0, n);
+
+function learn() {
+  const ex = l => UU.filter(x => uLetter(x) === l).slice(0, 4);
+  const row = x => `<tr><td>${uPic(x)}</td><td>${czSay(`<b>${uMark(x)}</b>`, x.w)}</td></tr>`;
+  app.innerHTML = `<h2 class="clk" data-say="U, Ú, Ů">📖 Kdy píšu ú a kdy ů? <span class="ico">🔊</span></h2>
+    <div class="box clk" data-say="Dlouhé ú s čárkou píšeme na začátku slova. Například úl, úkol, úterý.">⬅️ <b>ú</b> s čárkou píšeme <b>na začátku slova</b>: úl, úkol, úterý. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Dlouhé ů s kroužkem píšeme uprostřed a na konci slova. Například dům, kůň, domů.">⏺️ <b>ů</b> s kroužkem píšeme <b>uprostřed a na konci slova</b>: dům, kůň, domů. <span class="ico">🔊</span></div>
+    <div class="box clk" data-say="Když slyšíš krátké u, píšeš u bez čárky a bez kroužku. Může být kdekoli, třeba ruka nebo ucho.">✋ Když slyšíš <b>krátké u</b>, píšeš <b>u</b> – může být kdekoli: ruka, ucho. <span class="ico">🔊</span></div>
+    <table class="rules center" style="margin:0 auto"><tr><th>ú</th><th></th><th>ů</th><th></th><th>u</th></tr>
+    ${[0, 1, 2, 3].map(k => `<tr>${["ú", "ů", "u"].map(l => { const x = ex(l)[k]; return x ? `<td>${uPic(x)}</td><td>${czSay(`<b>${uMark(x)}</b>`, x.w)}</td>` : "<td></td><td></td>"; }).join("")}</tr>`).join("")}</table>
+    <p class="center note">Klikni na slovo a poslechni si ho.</p>`;
+  czBind();
+}
+
+function fill() {
+  const items = uFew(UU, 10).map(x => ({
+    q: `${uPic(x)}<div class="big">${uGap(x)}</div>`, say: x.w, rate: 0.7,
+    opts: ["u", "ú", "ů"], a: uLetter(x), why: uWhy(x), after: x.w,
+  }));
+  cvicChoice({ title: "🔍 Doplň u, ú nebo ů", items, again: fill, cls: "three" });
+}
+
+function sortMode() {
+  const pickL = l => uFew(UU.filter(x => uLetter(x) === l), 3);
+  const items = shuffle([...pickL("ú"), ...pickL("ů"), ...pickL("u")]).map(x => ({ t: `${x.e} ${x.w}`, say: x.w, k: uLetter(x), why: uWhy(x) }));
+  cvicSort({ title: "🧺 Roztřiď slova", again: sortMode, items, wrongWhy: true,
+    cols: [{ k: "ú", t: "ú na začátku" }, { k: "ů", t: "ů uprostřed / na konci" }, { k: "u", t: "krátké u" }] });
+}
+
+function dict() {
+  const extra = "aeiorlmnkstdp";
+  cvicDictation({
+    title: "✏️ Diktát", items: uFew(UU, 8), again: dict, showPic: true,
+    keys: x => shuffle([...new Set([...x.w, "u", "ú", "ů", ...uFew([...extra].filter(l => !x.w.includes(l)), 2)])]),
+    help: x => `${uWhy(x)}: <span class="big">${[...x.w].map((c, k) => k === 0 ? c : "_").join(" ")}</span>`,
+    wrong: (x, v) => [...v].some(c => "uúů".includes(c)) && !v.includes(uLetter(x)) ? `Pozor na u. ${uWhy(x)}` : "Ještě ne, poslechni si slovo znovu",
+  });
+}
+
+skolaStart({ scoreKey: "cjUUUScore", english: false, demo: "Ve středu jdeme domů.", modes: { learn, fill, sortMode, dict } });
+</script>
+</body>
+</html>
