@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b4bb7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
+<title>Staré pověsti české 🏰</title>
+<link rel="stylesheet" href="../../common/skola.css">
+<style>
+  .story { background: #fff; border: 2px solid #ddd6ff; border-radius: 14px; padding: 12px 16px; font-size: 1.3rem; line-height: 1.7; }
+  .story .s { cursor: pointer; border-radius: 6px; }
+  .story .s:hover, .story .s.on { background: #ddd6ff; }
+  .story .ico { font-size: .7em; opacity: .5; }
+  .texts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .texts button { font-size: 1.15rem; padding: 14px; border-radius: 14px; border: 2px solid #5b4bb7; background: #fff; cursor: pointer; }
+  .texts button b { display: block; font-size: 2rem; }
+  .q { font-size: 1.4rem; font-weight: bold; color: #3a2d99; text-align: center; margin: 14px 0 10px; }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; color: #5b4bb7; font-weight: bold; }
+  details .story { font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="index.html">← Všechna témata</a><br>
+  <h1>🏰 Staré pověsti české</h1>
+  <div class="score">⭐ Body: <span id="score">0</span></div>
+  <div class="voicewarn" id="voiceWarn"></div>
+</header>
+<nav>
+  <button data-mode="learn" class="active">📖 Co je pověst</button>
+  <button data-mode="choose">📚 Vyber pověst</button>
+  <button data-mode="random">🎲 Náhodná pověst</button>
+  <button data-mode="who">🧩 Kdo je kdo?</button>
+</nav>
+<main id="app"></main>
+
+<script src="../../common/skola.js"></script>
+<script src="../../common/cvic.js"></script>
+<script>
+/* věta "text|výslovnost" – za | je text pro hlas; otázky: první možnost je správná */
+const TEXTS = [
+  { e: "🏔️", t: "Praotec Čech", s: [
+    "Kdysi dávno putoval z daleké země kmen lidí, kteří hledali nový domov.",
+    "Vedl je moudrý stařešina Čech.",
+    "Jednoho dne vystoupil na horu Říp a rozhlédl se po krajině.",
+    "Uviděl lesy plné zvěře, řeky plné ryb a úrodná pole.",
+    "Řekl svým lidem, že tohle je země oplývající mlékem a strdím.",
+    "Strdí je staré slovo pro med.",
+    "Lidé zde zůstali a podle svého vůdce si začali říkat Čechové.",
+  ], q: [
+    ["Na kterou horu vystoupil praotec Čech?", "na Říp", "na Sněžku", "na Vyšehrad", "na Blaník"],
+    ["Co znamená staré slovo strdí?", "med", "mléko", "chléb", "sůl"],
+    ["Proč se kmen v nové zemi usadil?", "Krajina byla bohatá a úrodná.", "Byli unavení z cesty.", "Našli tam zlatý poklad.", "Porazili tam nepřítele."],
+    ["Podle koho dostali Čechové své jméno?", "podle praotce Čecha", "podle hory Říp", "podle řeky", "podle kněžny Libuše"],
+  ] },
+  { e: "👑", t: "Libuše a Přemysl", s: [
+    "Po smrti knížete Kroka vládla lidem jeho nejmladší dcera Libuše.",
+    "Byla moudrá a spravedlivá a uměla věštit budoucnost.",
+    "Jednou se dva muži přeli o pole a ten, kterému nedala za pravdu, se rozzlobil.",
+    "Křičel, že je hanba, když mužům vládne žena.",
+    "Libuše proto řekla, že si lidé mají vybrat knížete.",
+    "Ukázala, kde ho najdou: ve vsi Stadice oral pole muž jménem Přemysl.",
+    "Poslové šli za Libušiným bílým koněm a opravdu Přemysla našli u pluhu.",
+    "Přemysl se stal Libušiným manželem a knížetem a založil rod Přemyslovců.",
+  ], q: [
+    ["Čí dcerou byla Libuše?", "knížete Kroka", "praotce Čecha", "Přemysla", "Horymíra"],
+    ["Proč Libuše řekla, ať si lidé vyberou knížete?", "Jeden muž křičel, že ženě nechce poslouchat.", "Byla nemocná.", "Chtěla odejít ze země.", "Prohrála válku."],
+    ["Co dělal Přemysl, když ho poslové našli?", "oral pole", "lovil v lese", "stavěl hrad", "pásl ovce"],
+    ["Jak poslové našli cestu do Stadic?", "šli za Libušiným bílým koněm", "podle mapy", "ukázal jim ji pastýř", "šli podél řeky"],
+    ["Jaký rod Přemysl založil?", "Přemyslovce", "Lucemburky", "Habsburky", "Jagellonce"],
+  ] },
+  { e: "🐴", t: "Horymír a Šemík", s: [
+    "Vladyka Horymír z Neumětel měl věrného a moudrého koně Šemíka.",
+    "Horníci, kteří hledali stříbro a zlato, ničili kolem dolů pole sedláků.",
+    "Horymír se sedláků zastal a pokáral horníky u knížete Křesomysla.",
+    "Rozzlobení horníci pak Horymírovi vypálili tvrz.",
+    "On jim to oplatil a jejich doly zapálil.",
+    "Kníže ho za to odsoudil k smrti na Vyšehradě.",
+    "Horymír si jako poslední přání vyprosil, že se smí na Šemíkovi ještě projet.",
+    "Šemík se rozběhl, skočil z vysoké vyšehradské skály přes hradby do Vltavy a doplaval na druhý břeh.",
+    "Doma v Neumětelích ale Šemík padl, protože byl zraněný.",
+    "Horymír ho pochoval u brány a kníže mu nakonec odpustil.",
+  ], q: [
+    ["Jak se jmenoval Horymírův kůň?", "Šemík", "Bucefal", "Bělouš", "Hrom"],
+    ["Proč se Horymír s horníky pohádal?", "Ničili sedlákům pole.", "Ukradli mu koně.", "Nechtěli platit daně.", "Kopali na jeho hradě."],
+    ["Co si Horymír přál před trestem?", "Ještě se projet na Šemíkovi.", "Vidět rodinu.", "Dobrou večeři.", "Mluvit s Libuší."],
+    ["Kam Šemík skočil?", "z vyšehradské skály do Vltavy", "přes potok", "do studny", "z mostu do Labe"],
+    ["Proč Šemík v Neumětelích padl?", "Byl po skoku zraněný.", "Byl velmi starý.", "Snědl jedovatou trávu.", "Zabili ho horníci."],
+  ] },
+  { e: "🕰️", t: "Mistr Hanuš a orloj", s: [
+    "Na Staroměstské radnici v Praze je slavný orloj.",
+    "Podle pověsti ho sestrojil mistr Hanuš.",
+    "Orloj ukazoval nejen čas, ale i pohyb Slunce, Měsíce a hvězd.",
+    "Pražští konšelé se báli, že Hanuš postaví podobný orloj i v jiném městě.",
+    "Proto ho v noci přepadli a oslepili.",
+    "Slepý Hanuš si nechal dovést k orloji a sáhl do jeho stroje.",
+    "Orloj se zastavil a dlouho ho nikdo nedokázal opravit.",
+    "Hanuš brzy nato zemřel.",
+  ], q: [
+    ["Kde stojí orloj?", "na Staroměstské radnici v Praze", "na Vyšehradě", "na Pražském hradě", "v Brně"],
+    ["Co orloj ukazoval kromě času?", "pohyb Slunce, Měsíce a hvězd", "počasí", "jména konšelů", "ceny na trhu"],
+    ["Čeho se konšelé báli?", "Že Hanuš postaví orloj i jinde.", "Že orloj spadne.", "Že Hanuš uteče s penězi.", "Že orloj jde špatně."],
+    ["Co udělal slepý Hanuš?", "Zastavil orloj.", "Opravil orloj.", "Utekl z Prahy.", "Postavil nový orloj."],
+  ] },
+  { e: "🗿", t: "Golem", s: [
+    "V pražském židovském městě žil učený rabi Löw.|V pražském židovském městě žil učený rabi Lév.",
+    "Podle pověsti uhnětl z hlíny velkou postavu, které se říká Golem.",
+    "Golem ožil, když mu rabi vložil do úst kouzelný lísteček, šém.",
+    "Golem byl silný a poslušný a pomáhal s těžkou prací.",
+    "Každý pátek večer mu ale rabi musel šém vyndat, aby v sobotu odpočíval.",
+    "Jednou na to rabi zapomněl a Golem se rozzuřil a začal všechno kolem ničit.",
+    "Rabi Löw mu šém rychle vytrhl z úst a Golem se rozpadl na hlínu.|Rabi Lév mu šém rychle vytrhl z úst a Golem se rozpadl na hlínu.",
+    "Jeho zbytky prý dodnes leží na půdě Staronové synagogy.",
+  ], q: [
+    ["Z čeho byl Golem?", "z hlíny", "ze dřeva", "z kamene", "ze železa"],
+    ["Co Golema oživilo?", "kouzelný lísteček šém", "blesk", "voda ze studny", "kouzelná hůlka"],
+    ["Proč se Golem rozzuřil?", "Rabi mu zapomněl vyndat šém.", "Měl hlad.", "Někdo ho urazil.", "Bolela ho hlava."],
+    ["Kde prý leží zbytky Golema?", "na půdě Staronové synagogy", "ve Vltavě", "na Pražském hradě", "v orloji"],
+  ] },
+  { e: "⚔️", t: "Blaničtí rytíři", s: [
+    "Uvnitř hory Blaník spí vojsko rytířů na koních.",
+    "Vede je svatý Václav.",
+    "Jednou zabloudil do hory mladý pasáček a usnul tam.",
+    "Když se probudil a vrátil domů, zjistil, že uběhlo mnoho let.",
+    "Podle pověsti rytíři vyjedou, až bude české zemi nejhůř.",
+    "Pomohou jí a zaženou nepřátele.",
+  ], q: [
+    ["Kde spí rytíři?", "v hoře Blaník", "na Vyšehradě", "pod Karlovým mostem", "na hoře Říp"],
+    ["Kdo vede blanické rytíře?", "svatý Václav", "Přemysl", "Horymír", "Karel IV."],
+    ["Co zjistil pasáček, když se vrátil domů?", "Že uběhlo mnoho let.", "Že mu utekly ovce.", "Že vyhrál poklad.", "Že je zima."],
+    ["Kdy mají rytíři vyjet?", "až bude české zemi nejhůř", "každé Vánoce", "jednou za sto let", "až zazvoní zvon"],
+  ] },
+];
+/* Kdo je kdo: [otázka, správně, špatně…] */
+const WHO = [
+  ["Kdo vystoupil na horu Říp?", "praotec Čech", "Přemysl", "Horymír", "mistr Hanuš"],
+  ["Kdo uměl věštit budoucnost?", "kněžna Libuše", "praotec Čech", "rabi Löw", "Šemík"],
+  ["Kdo byl oráčem ze Stadic?", "Přemysl", "Horymír", "Krok", "Hanuš"],
+  ["Kdo skočil z Vyšehradu do Vltavy?", "kůň Šemík", "Golem", "Přemysl", "kněžna Libuše"],
+  ["Kdo sestrojil pražský orloj?", "mistr Hanuš", "rabi Löw", "praotec Čech", "Horymír"],
+  ["Kdo uhnětl Golema z hlíny?", "rabi Löw", "mistr Hanuš", "Přemysl", "svatý Václav"],
+  ["Kdo vede rytíře v Blaníku?", "svatý Václav", "Horymír", "Přemysl", "praotec Čech"],
+  ["Čí otec byl kníže Krok?", "kněžny Libuše", "Přemysla", "Horymíra", "mistra Hanuše"],
+];
+const sayLow = t => t.replace(/Löw/g, "Lév");
+const sent = s => { const [t, say] = s.split("|"); return { t, say: say || t }; };
+const storyHtml = x => `<div class="story">${x.s.map(sent).map(s => `<span class="s" data-say="${s.say}">${s.t} <span class="ico">🔊</span></span>`).join(" ")}</div>`;
+function bindStory(root) {
+  root.querySelectorAll(".story .s").forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    root.querySelectorAll(".story .s.on").forEach(y => y.classList.remove("on"));
+    el.classList.add("on");
+    speakCz(el.dataset.say, 0.8);
+  });
+}
+
+function learn() {
+  const tips = [
+    ["🏰", "Pověst je vyprávění o skutečném místě, osobě nebo události, ke kterému lidé přidali něco neskutečného."],
+    ["🗺️", "Na rozdíl od pohádky se pověst váže ke konkrétnímu místu, třeba k hoře Říp, k Vyšehradu nebo k Praze."],
+    ["🗣️", "Pověsti si lidé dlouho vyprávěli ústně, z generace na generaci."],
+    ["📚", "Staré pověsti české sepsal spisovatel Alois Jirásek."],
+    ["❓", "Přečti si pověst a pak odpověz na otázky. Na větu můžeš kliknout a poslechnout si ji."],
+  ];
+  app.innerHTML = `<h2 class="clk" data-say="Co je pověst">📖 Co je pověst <span class="ico">🔊</span></h2>
+    ${tips.map(([e, t]) => `<div class="box clk" data-say="${t}">${e} ${t} <span class="ico">🔊</span></div>`).join("")}
+    <div class="center"><button class="btn" id="go">📚 Vybrat pověst</button></div>`;
+  czBind();
+  app.querySelector("#go").onclick = choose;
+}
+
+function choose() {
+  app.innerHTML = `<h2 class="clk" data-say="Vyber si pověst">📚 Vyber si pověst <span class="ico">🔊</span></h2>
+    <div class="texts">${TEXTS.map((x, k) => `<button data-k="${k}"><b>${x.e}</b>${x.t}</button>`).join("")}</div>`;
+  czBind();
+  app.querySelectorAll(".texts button").forEach(b => b.onclick = () => read(TEXTS[b.dataset.k]));
+}
+const random = () => read(pick(TEXTS));
+
+function read(x) {
+  app.innerHTML = `<h2 class="clk" data-say="${x.t}">${x.e} ${x.t} <span class="ico">🔊</span></h2>
+    <p class="center note">Přečti si pověst. Na větu můžeš kliknout a poslechnout si ji.</p>
+    ${storyHtml(x)}
+    <div class="center"><button class="btn" id="go">❓ Otázky ➡️</button></div>`;
+  czBind();
+  bindStory(app);
+  speakCz(x.t);
+  app.querySelector("#go").onclick = () => questions(x);
+}
+
+function questions(x) {
+  const items = x.q.map(([q, a, ...bad]) => ({ q, a, opts: shuffle([a, ...bad]) }));
+  cvicRound(items, () => read(x), (it, i, n, done) => {
+    app.innerHTML = `${cvicHead(`${x.e} ${x.t}`, i, n)}
+      <details><summary>📄 Ukázat text</summary>${storyHtml(x)}</details>
+      <div class="q clk" id="q">${it.q} <span class="ico">🔊</span></div>
+      <div class="options">${it.opts.map(t => `<button data-t="${t}">${t}</button>`).join("")}</div>
+      <div class="feedback" id="fb"></div><div class="center" id="nx"></div>`;
+    bindStory(app);
+    const say = () => speakCz(it.q, 0.85);
+    say();
+    app.querySelector("#q").onclick = say;
+    app.querySelectorAll(".options button").forEach(b => b.onclick = () => {
+      app.querySelectorAll(".options button").forEach(y => { y.disabled = true; if (y.dataset.t === it.a) y.classList.add("ok"); });
+      const fb = app.querySelector("#fb");
+      if (b.dataset.t === it.a) {
+        addScore(2);
+        fb.innerHTML = `<span class="good">Výborně! ⭐</span>`;
+        cvicAfterSpeech(() => done(true), 1300);
+      } else {
+        b.classList.add("bad");
+        fb.innerHTML = `<span class="badc">Správně je: ${it.a}<span class="note">Najdi to v textu 📄</span></span>`;
+        app.querySelector("details").open = true;
+        const nx = app.querySelector("#nx"); nx.innerHTML = `<button class="btn">Další ➡️</button>`; nx.firstChild.onclick = () => done(false);
+      }
+    });
+  });
+}
+
+function who() {
+  const items = shuffle(WHO).map(([q, a, ...bad]) => ({ q, say: q, opts: shuffle([a, ...bad]), a, after: sayLow(a) }));
+  cvicChoice({ title: "🧩 Kdo je kdo?", items, again: who });
+}
+
+skolaStart({ scoreKey: "cjPovestiScore", english: false, demo: "Praotec Čech vystoupil na horu Říp.", modes: { learn, choose, random, who } });
+</script>
+</body>
+</html>
